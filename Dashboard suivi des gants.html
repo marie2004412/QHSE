@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GantTrack Pro — Suivi Cycle de Vie EPI</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --primary:#0f52ba;--primary-light:#e8f0fe;--primary-mid:#3b7af5;--primary-dark:#0a3d8a;
+  --bg:#f0f2f7;--surface:#ffffff;--surface2:#f7f8fc;--surface3:#eef1f8;
+  --border:#e2e6f0;--border2:#c8d0e4;
+  --text:#0d1b3e;--text2:#4a5578;--text3:#8492b4;
+  --ok:#059669;--ok-bg:#ecfdf5;--ok-border:#a7f3d0;--ok-light:#d1fae5;
+  --att:#d97706;--att-bg:#fffbeb;--att-border:#fde68a;--att-light:#fef3c7;
+  --crit:#dc2626;--crit-bg:#fef2f2;--crit-border:#fecaca;--crit-light:#fee2e2;
+  --exp:#7c3aed;--exp-bg:#f5f3ff;--exp-border:#ddd6fe;--exp-light:#ede9fe;
+  --sidebar-w:220px;--topbar-h:60px;
+  --radius:10px;--radius-lg:14px;--radius-xl:18px;
+  --shadow:0 1px 3px rgba(15,82,186,.07),0 4px 16px rgba(15,82,186,.06);
+  --shadow-md:0 4px 12px rgba(15,82,186,.12),0 8px 32px rgba(15,82,186,.09);
+  --shadow-lg:0 8px 24px rgba(15,82,186,.15),0 16px 48px rgba(15,82,186,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:linear-gradient(180deg,#0a3480 0%,#0f52ba 60%,#1a6bd4 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(15,82,186,.18)}
+.sidebar-logo{display:flex;align-items:center;gap:11px;padding:20px 18px 18px;border-bottom:1px solid rgba(255,255,255,.12)}
+.logo-icon{width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
+.logo-text{font-size:15.5px;font-weight:800;color:#fff;letter-spacing:-.4px;line-height:1.1}
+.logo-ver{font-size:10px;color:rgba(255,255,255,.45);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.nav-section{padding:16px 14px 5px;font-size:9.5px;font-weight:700;color:rgba(255,255,255,.38);letter-spacing:.12em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 15px;border-radius:9px;color:rgba(255,255,255,.72);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;margin:1.5px 8px}
+.nav-item:hover{background:rgba(255,255,255,.12);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.2);color:#fff;font-weight:700}
+.nav-icon{width:17px;height:17px;opacity:.75;flex-shrink:0}
+.nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center;box-shadow:0 2px 6px rgba(239,68,68,.4)}
+.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:10.5px;color:rgba(255,255,255,.38);font-family:'JetBrains Mono',monospace;line-height:1.5}
+.sf-conformite{font-size:13px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:2px}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 26px;position:sticky;top:0;z-index:50;box-shadow:0 1px 6px rgba(15,82,186,.06)}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text2)}
+.page-title{font-size:15px;font-weight:700;color:var(--text);white-space:nowrap}
+.topbar-sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.topbar-date{font-size:11.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap}
+.tb-btn:hover{background:var(--primary-light);border-color:var(--primary-mid);color:var(--primary)}
+.tb-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(15,82,186,.25)}
+.tb-btn.primary:hover{background:var(--primary-mid)}
+
+/* CONTENT */
+.content{padding:22px 26px;flex:1}
+
+/* ALERT BANNERS */
+.alerts-stack{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.alert-banner{border-radius:var(--radius);padding:12px 16px;display:none;align-items:center;gap:12px;animation:slideDown .3s ease;border:1px solid transparent;border-left-width:4px}
+.alert-banner.show{display:flex}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.alert-banner.critical{background:linear-gradient(90deg,#fef2f2,#fff8f8);border-color:#fecaca;border-left-color:#dc2626}
+.alert-banner.expired{background:linear-gradient(90deg,#f5f3ff,#faf9ff);border-color:#ddd6fe;border-left-color:#7c3aed}
+.alert-banner.warning{background:linear-gradient(90deg,#fffbeb,#fffdf5);border-color:#fde68a;border-left-color:#d97706}
+.alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.alert-banner.critical .alert-dot{background:#dc2626;animation:pulse 1.4s infinite}
+.alert-banner.expired .alert-dot{background:#7c3aed;animation:pulse 1.8s infinite}
+.alert-banner.warning .alert-dot{background:#d97706}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+.alert-icon{font-size:16px;flex-shrink:0}
+.alert-content{flex:1}
+.alert-title{font-size:12.5px;font-weight:700;margin-bottom:2px}
+.alert-banner.critical .alert-title{color:#991b1b}
+.alert-banner.expired .alert-title{color:#5b21b6}
+.alert-banner.warning .alert-title{color:#92400e}
+.alert-desc{font-size:11.5px}
+.alert-banner.critical .alert-desc{color:#b91c1c}
+.alert-banner.expired .alert-desc{color:#6d28d9}
+.alert-banner.warning .alert-desc{color:#b45309}
+.alert-close{background:none;border:none;cursor:pointer;padding:3px;margin-left:8px;opacity:.5;font-size:14px;color:inherit}
+.alert-close:hover{opacity:1}
+
+/* FILTERS */
+.filters-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:18px;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;box-shadow:var(--shadow)}
+.filter-group{display:flex;flex-direction:column;gap:5px}
+.filter-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.filter-select{font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:500;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 30px 7px 11px;border-radius:8px;cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238492b4' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;transition:border-color .15s;min-width:140px}
+.filter-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,82,186,.1)}
+.filter-search{font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 11px 7px 34px;border-radius:8px;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%238492b4' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;transition:border-color .15s;width:170px}
+.filter-search:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,82,186,.1)}
+.filter-search::placeholder{color:var(--text3)}
+.filter-pills{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.fpill{font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif}
+.fpill:hover{background:var(--surface3)}
+.fpill.on.f-all{background:var(--primary-light);border-color:var(--primary-mid);color:var(--primary)}
+.fpill.on.f-ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok)}
+.fpill.on.f-att{background:var(--att-bg);border-color:var(--att-border);color:var(--att)}
+.fpill.on.f-crit{background:var(--crit-bg);border-color:var(--crit-border);color:var(--crit)}
+.fpill.on.f-exp{background:var(--exp-bg);border-color:var(--exp-border);color:var(--exp)}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin-bottom:18px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:17px 19px 15px;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s;cursor:default}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.kpi-stripe{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+.kpi-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px}
+.kpi-val{font-size:32px;font-weight:800;line-height:1;letter-spacing:-1px;margin-bottom:3px}
+.kpi-label{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:1px}
+.kpi-sub{font-size:11px;color:var(--text3)}
+.kpi-card.total .kpi-stripe{background:linear-gradient(90deg,#0f52ba,#3b7af5)}
+.kpi-card.total .kpi-icon{background:var(--primary-light)}
+.kpi-card.total .kpi-val{color:var(--primary)}
+.kpi-card.k-ok .kpi-stripe{background:var(--ok)}
+.kpi-card.k-ok .kpi-icon{background:var(--ok-bg)}
+.kpi-card.k-ok .kpi-val{color:var(--ok)}
+.kpi-card.k-att .kpi-stripe{background:var(--att)}
+.kpi-card.k-att .kpi-icon{background:var(--att-bg)}
+.kpi-card.k-att .kpi-val{color:var(--att)}
+.kpi-card.k-crit .kpi-stripe{background:var(--crit)}
+.kpi-card.k-crit .kpi-icon{background:var(--crit-bg)}
+.kpi-card.k-crit .kpi-val{color:var(--crit)}
+.kpi-card.k-exp .kpi-stripe{background:var(--exp)}
+.kpi-card.k-exp .kpi-icon{background:var(--exp-bg)}
+.kpi-card.k-exp .kpi-val{color:var(--exp)}
+
+/* KPI conformite special */
+.kpi-card.k-conf{border:1.5px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,#0891b2,#059669) border-box}
+.kpi-card.k-conf .kpi-stripe{background:linear-gradient(90deg,#0891b2,#059669)}
+.kpi-card.k-conf .kpi-icon{background:linear-gradient(135deg,#ecfeff,#ecfdf5)}
+.kpi-card.k-conf .kpi-val{background:linear-gradient(135deg,#0891b2,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.kpi-conf-bar-wrap{margin-top:8px;height:5px;background:var(--surface3);border-radius:10px;overflow:hidden}
+.kpi-conf-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#0891b2,#059669);transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* CHARTS */
+.charts-row{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:14px;margin-bottom:18px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;box-shadow:var(--shadow)}
+.chart-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.chart-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.chart-sub{font-size:11px;color:var(--text3)}
+.chart-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;border:1px solid transparent}
+.chart-badge.ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-border)}
+.chart-badge.crit{background:var(--crit-bg);color:var(--crit);border-color:var(--crit-border)}
+.chart-badge.exp{background:var(--exp-bg);color:var(--exp);border-color:var(--exp-border)}
+.chart-wrap{position:relative;height:190px;display:flex;align-items:center;justify-content:center}
+.donut-center{position:absolute;text-align:center;pointer-events:none}
+.donut-val{font-size:28px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;letter-spacing:-1px}
+.donut-lbl{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.chart-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-count{font-weight:700;margin-left:1px;font-family:'JetBrains Mono',monospace}
+
+/* Ctrl segment bars */
+.ctrl-chart-wrap{display:flex;flex-direction:column;gap:14px;padding:4px 0}
+.ctrl-seg{display:flex;align-items:center;gap:10px}
+.ctrl-seg-label{font-size:11.5px;font-weight:600;color:var(--text2);width:90px;flex-shrink:0}
+.ctrl-seg-bar-wrap{flex:1;height:24px;background:var(--surface2);border-radius:7px;overflow:hidden;border:1px solid var(--border)}
+.ctrl-seg-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;font-size:11px;font-weight:700;color:#fff;min-width:28px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.ctrl-seg.done .ctrl-seg-bar{background:linear-gradient(90deg,#059669,#10b981)}
+.ctrl-seg.pending .ctrl-seg-bar{background:linear-gradient(90deg,#d97706,#f59e0b)}
+.ctrl-seg.overdue .ctrl-seg-bar{background:linear-gradient(90deg,#dc2626,#ef4444)}
+.ctrl-seg-val{font-size:12.5px;font-weight:700;width:30px;text-align:right;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.ctrl-seg.done .ctrl-seg-val{color:var(--ok)}
+.ctrl-seg.pending .ctrl-seg-val{color:var(--att)}
+.ctrl-seg.overdue .ctrl-seg-val{color:var(--crit)}
+
+/* TABLE */
+.table-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow);overflow:hidden}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.table-title{font-size:14px;font-weight:700;color:var(--text)}
+.table-count{font-size:11.5px;color:var(--text3);background:var(--surface2);padding:3px 11px;border-radius:20px;border:1px solid var(--border);margin-left:9px;font-family:'JetBrains Mono',monospace;font-weight:600}
+.table-actions{display:flex;gap:7px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:680px}
+thead th{padding:10px 16px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s}
+thead th:hover{color:var(--primary)}
+thead th.sorted{color:var(--primary)}
+.sort-ind{opacity:.35;margin-left:3px;font-size:9px}
+.sorted .sort-ind{opacity:1}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:11px 16px;font-size:12.5px;vertical-align:middle}
+.col-id{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text3);font-size:12.5px}
+.date-inp{background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--text);font-size:12px;font-family:'JetBrains Mono',monospace;padding:2px 4px;cursor:pointer;width:112px;transition:border-color .15s}
+.date-inp:focus{outline:none;border-bottom-color:var(--primary)}
+.col-date{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
+.days-chip{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;letter-spacing:-.3px}
+.days-chip.ok{background:var(--ok-light);color:var(--ok);border:1px solid var(--ok-border)}
+.days-chip.att{background:var(--att-light);color:var(--att);border:1px solid var(--att-border)}
+.days-chip.crit{background:var(--crit-light);color:var(--crit);border:1px solid var(--crit-border)}
+.days-chip.exp{background:var(--exp-light);color:var(--exp);border:1px solid var(--exp-border)}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;border:1px solid transparent}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.badge.ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-border)}
+.badge.ok::before{background:var(--ok)}
+.badge.att{background:var(--att-bg);color:var(--att);border-color:var(--att-border)}
+.badge.att::before{background:var(--att)}
+.badge.crit{background:var(--crit-bg);color:var(--crit);border-color:var(--crit-border)}
+.badge.crit::before{background:var(--crit);animation:pulse 1.2s infinite}
+.badge.exp{background:var(--exp-bg);color:var(--exp);border-color:var(--exp-border)}
+.badge.exp::before{background:var(--exp)}
+.ctrl-sel{background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--text2);font-size:11.5px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;padding:2px 4px;cursor:pointer;outline:none;transition:border-color .15s;max-width:130px}
+.ctrl-sel:focus{border-bottom-color:var(--primary)}
+.obs-cell{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;color:var(--text2)}
+.row-actions{display:flex;gap:4px}
+.icon-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all .15s}
+.icon-btn:hover{background:var(--primary-light);border-color:var(--primary-mid);color:var(--primary)}
+.icon-btn.del:hover{background:var(--crit-bg);border-color:var(--crit-border);color:var(--crit)}
+.no-rows{text-align:center;padding:44px;color:var(--text3);font-size:13px}
+.table-footer{padding:12px 22px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text3);flex-wrap:wrap;gap:8px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(13,27,62,.45);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-xl);border:1px solid var(--border);width:100%;max-width:460px;box-shadow:var(--shadow-lg);animation:modalIn .22s cubic-bezier(.34,1.3,.64,1);margin:16px}
+@keyframes modalIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-title-wrap{display:flex;align-items:center;gap:10px}
+.modal-icon{width:34px;height:34px;background:var(--primary-light);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.modal-title{font-size:15px;font-weight:700;color:var(--text)}
+.modal-body{padding:22px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-lbl{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.form-inp,.form-sel,.form-textarea{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;outline:none;transition:border-color .15s,box-shadow .15s}
+.form-inp:focus,.form-sel:focus,.form-textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,82,186,.1);background:var(--surface)}
+.form-sel{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238492b4' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.form-textarea{resize:vertical;min-height:65px}
+.form-readonly{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--surface3);border:1.5px solid var(--border);color:var(--text3);padding:8px 12px;border-radius:8px;cursor:default}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:16px 22px;border-top:1px solid var(--border);background:var(--surface2);border-radius:0 0 var(--radius-xl) var(--radius-xl)}
+
+/* RESPONSIVE */
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.charts-row{grid-template-columns:1fr 1fr}.charts-row>:last-child{grid-column:span 2}}
+@media(max-width:860px){.charts-row{grid-template-columns:1fr}.charts-row>:last-child{grid-column:span 1}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.hamburger{display:flex}.topbar{padding:0 16px}.content{padding:16px}.kpi-grid{grid-template-columns:1fr 1fr}}
+@media print{.sidebar,.topbar,.filters-bar,.table-actions,.row-actions,.alert-close{display:none!important}.main{margin-left:0}.content{padding:10px}}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🧤</div>
+    <div>
+      <div class="logo-text">GantTrack</div>
+      <div class="logo-ver">EPI · v2.1</div>
+    </div>
+  </div>
+  <div class="nav-section">Tableau de bord</div>
+  <div class="nav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Vue d'ensemble
+    <span class="nav-badge" id="nb-crit" style="display:none">0</span>
+  </div>
+  <div class="nav-item" onclick="document.getElementById('table-section').scrollIntoView({behavior:'smooth'})">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Inventaire
+  </div>
+  <div class="nav-item" onclick="document.getElementById('alerts-stack').scrollIntoView({behavior:'smooth'})">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Alertes
+  </div>
+  <div class="nav-section">Gestion</div>
+  <div class="nav-item" onclick="openModal()">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Ajouter un gant
+  </div>
+  <div class="nav-item" onclick="exportCSV()">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Exporter CSV
+  </div>
+  <div class="nav-item" onclick="window.print()">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Exporter PDF
+  </div>
+  <div class="sidebar-footer">
+    <div class="sf-conformite" id="sf-conf">— %</div>
+    <div>Taux de conformité</div>
+    <div id="sf-date" style="margin-top:6px;border-top:1px solid rgba(255,255,255,.08);padding-top:6px"></div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="page-title">Suivi Cycle de Vie — Gants EPI</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-date" id="topbar-date"></div>
+    <div class="topbar-right">
+      <button class="tb-btn" onclick="exportCSV()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>CSV</span>
+      </button>
+      <button class="tb-btn" onclick="window.print()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>PDF</span>
+      </button>
+      <button class="tb-btn primary" onclick="openModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouveau gant
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ALERTES -->
+    <div class="alerts-stack" id="alerts-stack">
+      <div class="alert-banner expired" id="alert-exp">
+        <div class="alert-dot"></div>
+        <div class="alert-icon">🚫</div>
+        <div class="alert-content">
+          <div class="alert-title">Gants expirés — retrait immédiat requis</div>
+          <div class="alert-desc" id="alert-exp-desc"></div>
+        </div>
+        <button class="alert-close" onclick="this.closest('.alert-banner').style.display='none'">✕</button>
+      </div>
+      <div class="alert-banner critical" id="alert-crit">
+        <div class="alert-dot"></div>
+        <div class="alert-icon">🔥</div>
+        <div class="alert-content">
+          <div class="alert-title">Gants en zone critique</div>
+          <div class="alert-desc" id="alert-crit-desc"></div>
+        </div>
+        <button class="alert-close" onclick="this.closest('.alert-banner').style.display='none'">✕</button>
+      </div>
+      <div class="alert-banner warning" id="alert-ctrl">
+        <div class="alert-dot"></div>
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <div class="alert-title">Contrôles en retard</div>
+          <div class="alert-desc" id="alert-ctrl-desc"></div>
+        </div>
+        <button class="alert-close" onclick="this.closest('.alert-banner').style.display='none'">✕</button>
+      </div>
+    </div>
+
+    <!-- FILTRES -->
+    <div class="filters-bar">
+      <div class="filter-group">
+        <span class="filter-label">Contrôle</span>
+        <select class="filter-select" id="f-ctrl" onchange="render()">
+          <option value="">Tous les contrôles</option>
+          <option value="done">✓ Effectué</option>
+          <option value="pending">◷ À planifier</option>
+          <option value="overdue">⚠ En retard</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Statut</span>
+        <div class="filter-pills">
+          <button class="fpill f-all on" onclick="setFilter('all',this)">Tous</button>
+          <button class="fpill f-ok"   onclick="setFilter('ok',this)">Conforme</button>
+          <button class="fpill f-att"  onclick="setFilter('att',this)">Attention</button>
+          <button class="fpill f-crit" onclick="setFilter('crit',this)">Critique</button>
+          <button class="fpill f-exp"  onclick="setFilter('exp',this)">Expiré</button>
+        </div>
+      </div>
+      <div class="filter-group" style="margin-left:auto">
+        <span class="filter-label">Recherche</span>
+        <input type="search" class="filter-search" placeholder="N° gant, observations…" id="f-search" oninput="render()"/>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-card total">
+        <div class="kpi-stripe"></div>
+        <div class="kpi-icon">🧤</div>
+        <div class="kpi-label">Total gants</div>
+        <div class="kpi-val" id="kv-total">0</div>
+        <div class="kpi-sub">inventaire complet</div>
+      </div>
+      <div class="kpi-card k-ok">
+        <div class="kpi-stripe"></div>
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-label">Conformes</div>
+        <div class="kpi-val" id="kv-ok">0</div>
+        <div class="kpi-sub">&gt; 90 jours restants</div>
+      </div>
+      <div class="kpi-card k-att">
+        <div class="kpi-stripe"></div>
+        <div class="kpi-icon">⚡</div>
+        <div class="kpi-label">Attention</div>
+        <div class="kpi-val" id="kv-att">0</div>
+        <div class="kpi-sub">31 à 90 jours</div>
+      </div>
+      <div class="kpi-card k-crit">
+        <div class="kpi-stripe"></div>
+        <div class="kpi-icon">🔥</div>
+        <div class="kpi-label">Critiques</div>
+        <div class="kpi-val" id="kv-crit">0</div>
+        <div class="kpi-sub">0 à 30 jours</div>
+      </div>
+      <div class="kpi-card k-exp">
+        <div class="kpi-stripe"></div>
+        <div class="kpi-icon">🚫</div>
+        <div class="kpi-label">Expirés</div>
+        <div class="kpi-val" id="kv-exp">0</div>
+        <div class="kpi-sub">retrait immédiat</div>
+      </div>
+    </div>
+
+    <!-- KPI CONFORMITE (pleine largeur) -->
+    <div style="margin-bottom:18px">
+      <div class="kpi-card k-conf" style="display:flex;align-items:center;gap:24px;padding:16px 22px">
+        <div class="kpi-stripe"></div>
+        <div class="kpi-icon" style="margin-bottom:0;flex-shrink:0">📊</div>
+        <div style="flex:0 0 auto">
+          <div class="kpi-label">Taux de conformité</div>
+          <div class="kpi-val" id="kv-conf" style="font-size:36px">0%</div>
+        </div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:6px">
+            <span>Gants conformes (≥90j)</span>
+            <span id="conf-detail">0 / 0</span>
+          </div>
+          <div class="kpi-conf-bar-wrap" style="height:8px">
+            <div class="kpi-conf-bar" id="conf-bar" style="width:0%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:5px">
+            <span>0%</span><span>Objectif : 100%</span>
+          </div>
+        </div>
+        <div id="conf-badge" style="flex-shrink:0;font-size:13px;font-weight:700;padding:6px 16px;border-radius:20px;border:2px solid">—</div>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUES -->
+    <div class="charts-row">
+      <!-- Donut statuts -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Répartition par statut</div>
+            <div class="chart-sub">Distribution du parc</div>
+          </div>
+          <span class="chart-badge ok" id="donut-badge">OK</span>
+        </div>
+        <div class="chart-wrap" style="height:170px">
+          <canvas id="donutChart"></canvas>
+          <div class="donut-center">
+            <div class="donut-val" id="donut-total">0</div>
+            <div class="donut-lbl">gants</div>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#059669"></div>Conformes <span class="leg-count" id="lc-ok">0</span></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#d97706"></div>Attention <span class="leg-count" id="lc-att">0</span></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#dc2626"></div>Critiques <span class="leg-count" id="lc-crit">0</span></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#7c3aed"></div>Expirés <span class="leg-count" id="lc-exp">0</span></div>
+        </div>
+      </div>
+
+      <!-- État des contrôles -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">État des contrôles EPI</div>
+            <div class="chart-sub">Effectués · À planifier · En retard</div>
+          </div>
+        </div>
+        <div class="ctrl-chart-wrap" style="margin-top:8px">
+          <div class="ctrl-seg done">
+            <span class="ctrl-seg-label">✓ Effectués</span>
+            <div class="ctrl-seg-bar-wrap"><div class="ctrl-seg-bar" id="ctrl-bar-done" style="width:0%">0</div></div>
+            <span class="ctrl-seg-val" id="ctrl-val-done">0</span>
+          </div>
+          <div class="ctrl-seg pending">
+            <span class="ctrl-seg-label">◷ À planifier</span>
+            <div class="ctrl-seg-bar-wrap"><div class="ctrl-seg-bar" id="ctrl-bar-pending" style="width:0%">0</div></div>
+            <span class="ctrl-seg-val" id="ctrl-val-pending">0</span>
+          </div>
+          <div class="ctrl-seg overdue">
+            <span class="ctrl-seg-label">⚠ En retard</span>
+            <div class="ctrl-seg-bar-wrap"><div class="ctrl-seg-bar" id="ctrl-bar-overdue" style="width:0%">0</div></div>
+            <span class="ctrl-seg-val" id="ctrl-val-overdue">0</span>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <canvas id="ctrlArcChart" style="max-height:110px"></canvas>
+        </div>
+      </div>
+
+      <!-- Expirations par trimestre -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Échéances à venir</div>
+            <div class="chart-sub">Expirations par trimestre</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="timelineChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-section" id="table-section">
+      <div class="table-header">
+        <div style="display:flex;align-items:center">
+          <span class="table-title">Inventaire des gants EPI</span>
+          <span class="table-count" id="table-count">0</span>
+        </div>
+        <div class="table-actions">
+          <button class="tb-btn" onclick="openModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter
+          </button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('id')">N° <span class="sort-ind" id="si-id">↕</span></th>
+              <th onclick="sortBy('montage')">Date de montage <span class="sort-ind" id="si-montage">↕</span></th>
+              <th onclick="sortBy('expiration')">Date d'expiration <span class="sort-ind" id="si-expiration">↕</span></th>
+              <th onclick="sortBy('jours')" style="text-align:right">Jours restants <span class="sort-ind" id="si-jours">↕</span></th>
+              <th onclick="sortBy('statut')">Statut <span class="sort-ind" id="si-statut">↕</span></th>
+              <th onclick="sortBy('ctrl')">Dernier contrôle <span class="sort-ind" id="si-ctrl">↕</span></th>
+              <th onclick="sortBy('ctrlStatus')">Statut contrôle <span class="sort-ind" id="si-ctrlStatus">↕</span></th>
+              <th>Observations</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span id="tf-info">— gants affichés</span>
+        <span>Expiration = date de montage + 3 ans · Mise à jour automatique</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title-wrap">
+        <div class="modal-icon">🧤</div>
+        <div class="modal-title" id="modal-title">Nouveau gant</div>
+      </div>
+      <button class="icon-btn" onclick="closeModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-lbl">N° Gant</label>
+          <input type="number" class="form-inp" id="m-id" placeholder="Auto" min="1"/>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">Date de montage</label>
+          <input type="date" class="form-inp" id="m-montage" oninput="updateExpPreview(this.value)"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-lbl">Date d'expiration (calculée)</label>
+          <div class="form-readonly" id="m-exp-preview">—</div>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">Dernier contrôle</label>
+          <input type="date" class="form-inp" id="m-ctrl"/>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-lbl">Statut du contrôle</label>
+          <select class="form-sel" id="m-ctrl-status">
+            <option value="done">✓ Effectué</option>
+            <option value="pending">◷ À planifier</option>
+            <option value="overdue">⚠ En retard</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-lbl">Observations</label>
+          <textarea class="form-textarea" id="m-obs" placeholder="Remarques, anomalies, historique d'inspection…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="tb-btn" onclick="closeModal()">Annuler</button>
+      <button class="tb-btn primary" onclick="saveGant()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE = 'ganttrack_v21';
+
+// ── Données réelles ──────────────────────────────────────────
+const DATA_INITIALE = [];
+for(let i = 1; i <= 33; i++){
+  DATA_INITIALE.push({
+    id: i,
+    montage: '2022-10-29',   // 29/10/2022 pour tous
+    ctrlDate: '',
+    ctrlStatus: 'pending',
+    obs: ''
+  });
+}
+// ─────────────────────────────────────────────────────────────
+
+let gants = load();
+let filterSt = 'all', sortCol = 'id', sortAsc = true, editId = null;
+let donutCh, tlCh, ctrlArcCh;
+
+function load(){
+  try{ const d = localStorage.getItem(STORE); if(d) return JSON.parse(d); } catch(e){}
+  return DATA_INITIALE.map(g => ({...g}));
+}
+function save(){ try{ localStorage.setItem(STORE, JSON.stringify(gants)); } catch(e){} }
+
+function addThree(s){ const d = new Date(s+'T00:00:00'); d.setFullYear(d.getFullYear()+3); return d; }
+function daysDiff(exp){ const n = new Date(); n.setHours(0,0,0,0); return Math.round((exp-n)/86400000); }
+function status(days){ if(days<0) return 'exp'; if(days<=30) return 'crit'; if(days<=90) return 'att'; return 'ok'; }
+function fmtDate(d){ return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+const LABELS = {ok:'Conforme', att:'Attention', crit:'Critique', exp:'Expiré'};
+const CTRL_LABELS = {done:'Effectué', pending:'À planifier', overdue:'En retard'};
+
+function enrich(){
+  return gants.map(g => {
+    const exp = addThree(g.montage);
+    const days = daysDiff(exp);
+    const s = status(days);
+    return {...g, exp, days, s};
+  });
+}
+
+function setFilter(f, el){
+  filterSt = f;
+  document.querySelectorAll('.fpill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+function sortBy(col){
+  if(sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+  render();
+}
+function updateSortUI(){
+  ['id','montage','expiration','jours','statut','ctrl','ctrlStatus'].forEach(c => {
+    const el = document.getElementById('si-'+c); if(!el) return;
+    el.textContent = sortCol===c ? (sortAsc?'↑':'↓') : '↕';
+    el.closest('th').classList.toggle('sorted', sortCol===c);
+  });
+}
+
+function render(){
+  const all = enrich();
+  const counts = {ok:0, att:0, crit:0, exp:0};
+  all.forEach(g => counts[g.s]++);
+
+  const ctrlCounts = {done:0, pending:0, overdue:0};
+  all.forEach(g => { if(ctrlCounts[g.ctrlStatus] !== undefined) ctrlCounts[g.ctrlStatus]++; });
+
+  const total = all.length;
+  const taux = total > 0 ? Math.round((counts.ok / total)*100) : 0;
+
+  // KPIs
+  document.getElementById('kv-total').textContent = total;
+  document.getElementById('kv-ok').textContent    = counts.ok;
+  document.getElementById('kv-att').textContent   = counts.att;
+  document.getElementById('kv-crit').textContent  = counts.crit;
+  document.getElementById('kv-exp').textContent   = counts.exp;
+  document.getElementById('kv-conf').textContent  = taux + '%';
+  document.getElementById('conf-bar').style.width = taux + '%';
+  document.getElementById('conf-detail').textContent = counts.ok + ' / ' + total;
+  document.getElementById('sf-conf').textContent  = taux + '%';
+  document.getElementById('donut-total').textContent = total;
+
+  // Legend counts
+  document.getElementById('lc-ok').textContent   = counts.ok;
+  document.getElementById('lc-att').textContent  = counts.att;
+  document.getElementById('lc-crit').textContent = counts.crit;
+  document.getElementById('lc-exp').textContent  = counts.exp;
+
+  // Conformité badge
+  const cb = document.getElementById('conf-badge');
+  if(taux >= 80){ cb.textContent='✓ Satisfaisant'; cb.style.cssText='flex-shrink:0;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:2px solid var(--ok-border);background:var(--ok-bg);color:var(--ok)'; }
+  else if(taux >= 50){ cb.textContent='⚠ À améliorer'; cb.style.cssText='flex-shrink:0;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:2px solid var(--att-border);background:var(--att-bg);color:var(--att)'; }
+  else{ cb.textContent='✗ Non conforme'; cb.style.cssText='flex-shrink:0;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:2px solid var(--crit-border);background:var(--crit-bg);color:var(--crit)'; }
+
+  // Nav badge
+  const nb = counts.crit + counts.exp;
+  const nbEl = document.getElementById('nb-crit');
+  nbEl.textContent = nb || ''; nbEl.style.display = nb ? 'flex' : 'none';
+
+  // Donut badge
+  const dbEl = document.getElementById('donut-badge');
+  if(counts.exp > 0){ dbEl.textContent='Expirés !'; dbEl.className='chart-badge exp'; }
+  else if(counts.crit > 0){ dbEl.textContent='Critique'; dbEl.className='chart-badge crit'; }
+  else{ dbEl.textContent=taux+'% conf.'; dbEl.className='chart-badge ok'; }
+
+  // Alertes
+  const aExp = document.getElementById('alert-exp');
+  const aCrit = document.getElementById('alert-crit');
+  const aCtrl = document.getElementById('alert-ctrl');
+
+  if(counts.exp > 0){
+    aExp.classList.add('show');
+    document.getElementById('alert-exp-desc').textContent = counts.exp+' gant'+(counts.exp>1?'s':'')+' ont dépassé la date d\'expiration (29/10/2025) — retrait immédiat obligatoire.';
+  } else { aExp.classList.remove('show'); }
+
+  if(counts.crit > 0){
+    aCrit.classList.add('show');
+    document.getElementById('alert-crit-desc').textContent = counts.crit+' gant'+(counts.crit>1?'s ont':'a')+' moins de 30 jours avant expiration — planifier le remplacement d\'urgence.';
+  } else { aCrit.classList.remove('show'); }
+
+  if(ctrlCounts.overdue > 0){
+    aCtrl.classList.add('show');
+    document.getElementById('alert-ctrl-desc').textContent = ctrlCounts.overdue+' contrôle'+(ctrlCounts.overdue>1?'s sont':' est')+' en retard — vérifications à planifier sans délai.';
+  } else { aCtrl.classList.remove('show'); }
+
+  // Charts
+  updateCharts(all, counts, ctrlCounts);
+
+  // Ctrl segment bars
+  const ctrlTotal = total || 1;
+  const updSeg = (barId, valId, count) => {
+    const pct = Math.max(7, Math.round((count/ctrlTotal)*100));
+    document.getElementById(barId).style.width = pct + '%';
+    document.getElementById(barId).textContent = count;
+    document.getElementById(valId).textContent = count;
+  };
+  updSeg('ctrl-bar-done','ctrl-val-done', ctrlCounts.done);
+  updSeg('ctrl-bar-pending','ctrl-val-pending', ctrlCounts.pending);
+  updSeg('ctrl-bar-overdue','ctrl-val-overdue', ctrlCounts.overdue);
+
+  // Filter
+  let data = all.slice();
+  const fctrl = document.getElementById('f-ctrl').value;
+  const q = (document.getElementById('f-search').value||'').toLowerCase();
+  if(fctrl) data = data.filter(g => g.ctrlStatus === fctrl);
+  if(filterSt !== 'all') data = data.filter(g => g.s === filterSt);
+  if(q) data = data.filter(g => String(g.id).includes(q)||(g.obs||'').toLowerCase().includes(q)||(g.ctrlDate||'').includes(q));
+
+  // Sort
+  const SORDER = {exp:0, crit:1, att:2, ok:3};
+  const CSORDER = {overdue:0, pending:1, done:2};
+  data.sort((a,b) => {
+    let va, vb;
+    if(sortCol==='id'){va=a.id;vb=b.id;}
+    else if(sortCol==='montage'){va=a.montage;vb=b.montage;}
+    else if(sortCol==='expiration'){va=a.exp;vb=b.exp;}
+    else if(sortCol==='jours'){va=a.days;vb=b.days;}
+    else if(sortCol==='ctrl'){va=a.ctrlDate||'';vb=b.ctrlDate||'';}
+    else if(sortCol==='ctrlStatus'){va=CSORDER[a.ctrlStatus]||0;vb=CSORDER[b.ctrlStatus]||0;}
+    else{va=SORDER[a.s];vb=SORDER[b.s];}
+    return sortAsc?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
+  });
+  updateSortUI();
+
+  document.getElementById('table-count').textContent = data.length;
+  document.getElementById('tf-info').textContent = data.length+' gant'+(data.length!==1?'s':'')+' affiché'+(data.length!==1?'s':'');
+
+  const tbody = document.getElementById('tbody');
+  if(!data.length){ tbody.innerHTML='<tr><td colspan="9" class="no-rows">Aucun gant correspondant aux filtres sélectionnés.</td></tr>'; return; }
+
+  tbody.innerHTML = data.map((g,i) => {
+    const daysStr = g.days < 0 ? `−${Math.abs(g.days)} j` : g.days===0 ? 'Auj.' : `+${g.days} j`;
+    const expStyle = g.days < 0 ? 'color:var(--exp);font-weight:700' : g.days<=30 ? 'color:var(--crit);font-weight:700' : g.days<=90 ? 'color:var(--att);font-weight:600' : 'color:var(--ok)';
+    const ctrlStr = g.ctrlDate ? fmtDate(new Date(g.ctrlDate+'T00:00:00')) : '—';
+    return `<tr style="animation:fadeRow .18s ${i*.02}s both">
+      <td><span class="col-id">#${String(g.id).padStart(2,'0')}</span></td>
+      <td><input type="date" class="date-inp" value="${g.montage}" onchange="updateField(${g.id},'montage',this.value)"/></td>
+      <td><span style="${expStyle};font-family:'JetBrains Mono',monospace;font-size:12px">${fmtDate(g.exp)}</span></td>
+      <td style="text-align:right"><span class="days-chip ${g.s}">${daysStr}</span></td>
+      <td><span class="badge ${g.s}">${LABELS[g.s]}</span></td>
+      <td><input type="date" class="date-inp" value="${g.ctrlDate||''}" onchange="updateField(${g.id},'ctrlDate',this.value)" style="width:108px"/></td>
+      <td>
+        <select class="ctrl-sel" onchange="updateField(${g.id},'ctrlStatus',this.value)">
+          <option value="done" ${g.ctrlStatus==='done'?'selected':''}>✓ Effectué</option>
+          <option value="pending" ${g.ctrlStatus==='pending'?'selected':''}>◷ À planifier</option>
+          <option value="overdue" ${g.ctrlStatus==='overdue'?'selected':''}>⚠ En retard</option>
+        </select>
+      </td>
+      <td class="obs-cell" title="${(g.obs||'').replace(/"/g,'&quot;')}">${g.obs||'<span style="color:var(--text3)">—</span>'}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" onclick="editGant(${g.id})" title="Modifier">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="icon-btn del" onclick="deleteGant(${g.id})" title="Supprimer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateCharts(all, counts, ctrlCounts){
+  // Donut statuts
+  const dData = [counts.ok, counts.att, counts.crit, counts.exp];
+  if(donutCh){ donutCh.data.datasets[0].data = dData; donutCh.update(); }
+  else{
+    donutCh = new Chart(document.getElementById('donutChart'),{
+      type:'doughnut',
+      data:{labels:['Conformes','Attention','Critiques','Expirés'],datasets:[{data:dData,backgroundColor:['#059669','#d97706','#dc2626','#7c3aed'],borderWidth:0,hoverOffset:5}]},
+      options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} gants`}}},animation:{duration:700}}
+    });
+  }
+
+  // Ctrl arc
+  const cData = [ctrlCounts.done, ctrlCounts.pending, ctrlCounts.overdue];
+  if(ctrlArcCh){ ctrlArcCh.data.datasets[0].data = cData; ctrlArcCh.update(); }
+  else{
+    ctrlArcCh = new Chart(document.getElementById('ctrlArcChart'),{
+      type:'doughnut',
+      data:{labels:['Effectués','À planifier','En retard'],datasets:[{data:cData,backgroundColor:['#059669','#d97706','#dc2626'],borderWidth:0,hoverOffset:4}]},
+      options:{cutout:'60%',plugins:{legend:{position:'right',labels:{font:{size:10.5},boxWidth:9,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}`}}},animation:{duration:600}}
+    });
+  }
+
+  // Timeline trimestres
+  const now = new Date(); now.setHours(0,0,0,0);
+  const quarters = [];
+  for(let q = 0; q < 4; q++){
+    const s = new Date(now); s.setMonth(s.getMonth()+q*3);
+    const e = new Date(s); e.setMonth(e.getMonth()+3);
+    quarters.push({label:'T'+(q+1), start:s, end:e, count:0});
+  }
+  all.forEach(g => {
+    if(g.exp < now) return;
+    quarters.forEach(qtr => { if(g.exp >= qtr.start && g.exp < qtr.end) qtr.count++; });
+  });
+  const tlColors = quarters.map(q => q.count>=8?'#dc2626':q.count>=3?'#d97706':'#059669');
+  if(tlCh){ tlCh.data.datasets[0].data=quarters.map(q=>q.count); tlCh.data.datasets[0].backgroundColor=tlColors; tlCh.update(); }
+  else{
+    tlCh = new Chart(document.getElementById('timelineChart'),{
+      type:'bar',
+      data:{labels:quarters.map(q=>q.label),datasets:[{label:'Expirations',data:quarters.map(q=>q.count),backgroundColor:tlColors,borderRadius:8,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} gants expirent ce trimestre`}}},scales:{x:{grid:{display:false},ticks:{font:{size:12,weight:'700'}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:11},stepSize:1}}},animation:{duration:500}}
+    });
+  }
+}
+
+function updateField(id, field, val){
+  const g = gants.find(x => x.id===id); if(g){ g[field]=val; save(); render(); }
+}
+
+function updateExpPreview(val){
+  if(!val){ document.getElementById('m-exp-preview').textContent='—'; return; }
+  document.getElementById('m-exp-preview').textContent = fmtDate(addThree(val));
+}
+
+function openModal(id=null){
+  editId = id;
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('modal-title').textContent = id ? `Modifier gant #${String(id).padStart(2,'0')}` : 'Nouveau gant';
+  if(id){
+    const g = gants.find(x=>x.id===id);
+    if(g){
+      document.getElementById('m-id').value = g.id;
+      document.getElementById('m-montage').value = g.montage;
+      document.getElementById('m-ctrl').value = g.ctrlDate||'';
+      document.getElementById('m-ctrl-status').value = g.ctrlStatus||'pending';
+      document.getElementById('m-obs').value = g.obs||'';
+      updateExpPreview(g.montage);
+    }
+  } else {
+    const maxId = gants.length ? Math.max(...gants.map(g=>g.id)) : 0;
+    document.getElementById('m-id').value = maxId+1;
+    document.getElementById('m-montage').value = today;
+    document.getElementById('m-ctrl').value = '';
+    document.getElementById('m-ctrl-status').value = 'pending';
+    document.getElementById('m-obs').value = '';
+    updateExpPreview(today);
+  }
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('show'); editId=null; }
+function saveGant(){
+  const idVal = parseInt(document.getElementById('m-id').value)||null;
+  const entry = {
+    id: editId || idVal || (gants.length ? Math.max(...gants.map(g=>g.id))+1 : 1),
+    montage: document.getElementById('m-montage').value || new Date().toISOString().slice(0,10),
+    ctrlDate: document.getElementById('m-ctrl').value,
+    ctrlStatus: document.getElementById('m-ctrl-status').value,
+    obs: document.getElementById('m-obs').value,
+  };
+  if(editId){ const idx=gants.findIndex(g=>g.id===editId); if(idx>=0) gants[idx]=entry; }
+  else { if(gants.some(g=>g.id===entry.id)) entry.id=gants.length?Math.max(...gants.map(g=>g.id))+1:1; gants.push(entry); }
+  save(); closeModal(); render();
+}
+function editGant(id){ openModal(id); }
+function deleteGant(id){
+  if(!confirm(`Supprimer définitivement le gant N°${String(id).padStart(2,'0')} ?`)) return;
+  gants = gants.filter(g=>g.id!==id); save(); render();
+}
+
+function exportCSV(){
+  const data = enrich();
+  const rows = [['N°','Date Montage','Date Expiration','Jours Restants','Statut','Dernier Contrôle','Statut Contrôle','Observations']];
+  data.forEach(g => rows.push([g.id, g.montage, fmtDate(g.exp), g.days, LABELS[g.s], g.ctrlDate||'', CTRL_LABELS[g.ctrlStatus]||'', g.obs||'']));
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = `suivi_gants_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// Init
+const ts = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('topbar-date').textContent = ts.charAt(0).toUpperCase()+ts.slice(1);
+document.getElementById('sf-date').textContent = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+
+const st = document.createElement('style');
+st.textContent = '@keyframes fadeRow{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}';
+document.head.appendChild(st);
+
+render();
+</script>
+</body>
+</html>
