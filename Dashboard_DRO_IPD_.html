@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DRO — Tableau de bord stratégique | IPD</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   MODERNISATION DESIGN — DRO IPD v4
+   Inspired by Power BI / Tableau aesthetics
+   ═══════════════════════════════════════════════ */
+
+/* Google Font */
+:root {
+  /* Core palette — preserved */
+  --blue:#0284C7; --blue-l:#EFF6FF; --blue-d:#0369A1;
+  --green:#059669; --green-l:#F0FDF4; --green-d:#047857;
+  --red:#DC2626; --red-l:#FEF2F2;
+  --amber:#D97706; --amber-l:#FFFBEB;
+  --border:#E2E8F0; --muted:#64748B; --text:#0F172A;
+  --card:#fff; --bg:#F0F4F8;
+  --sidebar:#0A1628; --sw:228px;
+
+  /* Extended modern palette */
+  --blue-vivid: #0EA5E9;
+  --blue-glow: rgba(14,165,233,0.15);
+  --surface-1: #FAFBFC;
+  --surface-2: #F3F6FA;
+  --glass: rgba(255,255,255,0.75);
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 16px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.05);
+  --shadow-lg: 0 10px 40px rgba(15,23,42,.12), 0 4px 12px rgba(15,23,42,.07);
+  --shadow-colored: 0 4px 20px rgba(2,132,199,.25);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── GLOBAL BASE ── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle animated gradient background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 900px 600px at 70% 10%, rgba(14,165,233,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 400px at 5% 80%, rgba(5,150,105,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── SIDEBAR — Premium dark nav ── */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: var(--sw);
+  background: linear-gradient(180deg, #0A1628 0%, #0D1F3C 100%);
+  padding: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255,255,255,.04);
+  box-shadow: 4px 0 24px rgba(0,0,0,.18);
+}
+
+/* Sidebar decorative accent */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0284C7, #06B6D4, #0284C7);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.sb-brand {
+  padding: 1.5rem 1.125rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  margin-bottom: 0.5rem;
+}
+
+.sb-logo {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0284C7, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 900; font-size: 13px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(2,132,199,.5);
+  letter-spacing: .5px;
+  transition: var(--transition-bounce);
+}
+.sb-logo:hover { transform: scale(1.08); }
+
+.sb-name {
+  font-size: 12.5px; font-weight: 700; color: #F1F5F9; line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+}
+.sb-sub { font-size: 10.5px; color: #475569; margin-top: 4px; }
+
+.nav-sec {
+  font-size: 9.5px; color: #2D4A6B;
+  text-transform: uppercase; letter-spacing: .1em;
+  margin: 1rem 0 4px 1rem; font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  margin: 1px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 13px;
+  color: #64748B; border: none; background: none;
+  width: calc(100% - 16px); text-align: left;
+  transition: var(--transition);
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(14,165,233,.12), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.nav-item:hover::before { opacity: 1; }
+.nav-item:hover { color: #CBD5E1; }
+
+.nav-item.active {
+  background: rgba(14,165,233,.14);
+  color: #38BDF8;
+  font-weight: 600;
+}
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: linear-gradient(180deg, #0EA5E9, #38BDF8);
+  border-radius: 0 3px 3px 0;
+}
+
+.nav-item i { font-size: 17px; flex-shrink: 0; }
+
+.sb-footer {
+  margin-top: auto;
+  padding: 1rem 0.875rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.sb-save-indicator {
+  font-size: 11px; color: #2D4A6B;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px;
+}
+
+/* ── MAIN ── */
+.main {
+  margin-left: var(--sw);
+  padding: 1.75rem 2rem;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.tab-pane { display: none; }
+.tab-pane.active {
+  display: block;
+  animation: fadeSlideIn 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAGE HEADER ── */
+.ph {
+  display: flex; align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.75rem; flex-wrap: wrap; gap: 12px;
+}
+.ph-left .ph-title {
+  font-size: 21px; font-weight: 800; color: var(--text);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.3px;
+}
+.ph-left .ph-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.ph-right { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1px solid transparent;
+  transition: var(--transition);
+  text-decoration: none;
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.2s;
+}
+.btn:hover::after { background: rgba(255,255,255,.08); }
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--blue), var(--blue-vivid));
+  color: #fff; border-color: transparent;
+  box-shadow: var(--shadow-colored);
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(2,132,199,.35);
+  transform: translateY(-1px);
+}
+.btn-outline {
+  background: var(--card); color: var(--text);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.btn-outline:hover {
+  background: var(--surface-1);
+  border-color: #CBD5E1;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-ghost {
+  background: transparent; border-color: transparent; color: var(--muted);
+}
+.btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn-danger {
+  background: var(--red-l); color: var(--red); border-color: #FECACA;
+}
+.btn-danger:hover { background: #FEE2E2; }
+.btn-approve {
+  background: #F0FDF4; color: #166534; border-color: #BBF7D0;
+}
+.btn-approve:hover { background: #DCFCE7; }
+.btn-refuse {
+  background: #FEF2F2; color: #991B1B; border-color: #FECACA;
+}
+.btn-refuse:hover { background: #FEE2E2; }
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 1.375rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #D1D5DB;
+}
+
+.card-title {
+  font-size: 13.5px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 1.25rem;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.1px;
+}
+.card-title i { color: var(--blue); font-size: 16px; }
+.card-title-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.card-title-row .card-title { margin-bottom: 0; }
+
+/* ── KPI CARDS ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 1.75rem;
+}
+
+.kpi {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 1.375rem 1.375rem 1.125rem;
+  position: relative; overflow: hidden;
+  cursor: default;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  transform: translate(30px, -30px);
+  opacity: 0.06;
+  transition: transform 0.4s, opacity 0.4s;
+}
+.kpi:hover::before { transform: translate(20px, -20px); opacity: 0.1; }
+
+.kpi:nth-child(1)::before { background: var(--blue); }
+.kpi:nth-child(2)::before { background: var(--red); }
+.kpi:nth-child(3)::before { background: #EA580C; }
+.kpi:nth-child(4)::before { background: var(--green); }
+
+.kpi:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: #CBD5E1;
+}
+
+.kpi-accent {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 3px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.kpi-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; margin-bottom: .875rem;
+  transition: var(--transition-bounce);
+}
+.kpi:hover .kpi-icon { transform: scale(1.1); }
+
+.kpi-val {
+  font-size: 32px; font-weight: 900;
+  color: var(--text); line-height: 1;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -1px;
+}
+
+/* Animated count-up effect via CSS */
+.kpi-val { transition: color 0.3s; }
+
+.kpi-label {
+  font-size: 12px; color: var(--muted);
+  margin-top: 6px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em;
+  font-family: 'Inter', sans-serif;
+}
+.kpi-foot {
+  font-size: 11px; color: #94A3B8;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--surface-2);
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* Trend indicator mini sparkline area */
+.kpi-trend {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+}
+.kpi-trend.up { color: var(--green); }
+.kpi-trend.down { color: var(--red); }
+
+/* ── CONGÉS KPI ── */
+.conge-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px; margin-bottom: 1.25rem;
+}
+.ckpi {
+  background: var(--card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  padding: 1.1rem 1.25rem;
+  position: relative; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.ckpi:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.ckpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.ckpi-val {
+  font-size: 28px; font-weight: 900; color: var(--text);
+  line-height: 1.1; font-family: 'Inter', sans-serif; letter-spacing: -0.5px;
+}
+.ckpi-label {
+  font-size: 10.5px; color: var(--muted);
+  margin-top: 4px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em;
+  font-family: 'Inter', sans-serif;
+}
+.ckpi-sub { font-size: 11px; color: #94A3B8; margin-top: 6px; }
+
+/* ── CHART ROWS ── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px; margin-bottom: 1.75rem;
+}
+.charts-row-3 {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 14px; margin-bottom: 1.75rem;
+}
+.chart-wrap { position: relative; width: 100%; }
+
+/* ── TABLE ── */
+.tcard {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden; margin-bottom: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+.thead {
+  padding: 1rem 1.375rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface-1);
+}
+.thead-title {
+  font-size: 13.5px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Inter', sans-serif;
+}
+.thead-title i { color: var(--blue); }
+.tscroll { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  font-size: 10.5px; color: var(--muted);
+  font-weight: 700; text-align: left;
+  padding: 10px 14px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase; letter-spacing: .05em;
+  white-space: nowrap; cursor: pointer; user-select: none;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.15s;
+}
+th:hover { color: var(--text); }
+th.sorted { color: var(--blue); }
+
+td {
+  font-size: 13px; padding: 11px 14px;
+  border-bottom: 1px solid #F8FAFC;
+  color: var(--text); vertical-align: middle;
+  transition: background 0.15s;
+}
+tr:hover td { background: var(--surface-1); }
+tr:last-child td { border-bottom: none; }
+.td-trunc { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+  white-space: nowrap; letter-spacing: .02em;
+  font-family: 'Inter', sans-serif;
+}
+.bg-blue { background: #DBEAFE; color: #1D4ED8; }
+.bg-green { background: #D1FAE5; color: #065F46; }
+.bg-red { background: var(--red-l); color: #991B1B; }
+.bg-amber { background: var(--amber-l); color: #78350F; }
+.bg-gray { background: #F1F5F9; color: #475569; }
+.bg-purple { background: #EDE9FE; color: #4C1D95; }
+.bg-orange { background: #FFF7ED; color: #9A3412; }
+
+/* ── PROGRESS BARS ── */
+.prog-row { display: flex; align-items: center; gap: 8px; }
+.prog-bar {
+  flex: 1; height: 6px;
+  background: var(--surface-2);
+  border-radius: 99px; overflow: hidden; min-width: 60px;
+}
+.prog-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--blue), var(--blue-vivid));
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.prog-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 4px; height: 100%;
+  background: rgba(255,255,255,0.6);
+  border-radius: 99px;
+}
+
+/* ── FILTERS ── */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+.fsel, .fsearch {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px; font-size: 13px;
+  color: var(--text); cursor: pointer;
+  font-family: 'DM Sans', inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+.fsel:focus, .fsearch:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-glow);
+}
+.fsearch { flex: 1; min-width: 180px; }
+
+/* ── MODAL ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(10,22,40,.55);
+  z-index: 500; align-items: center; justify-content: center; padding: 1rem;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: var(--card);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  width: 580px; max-width: 100%; max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 80px rgba(0,0,0,.25);
+  border: 1px solid var(--border);
+  animation: modalSlideIn 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-title {
+  font-size: 16px; font-weight: 800; color: var(--text);
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem;
+  font-family: 'Inter', sans-serif;
+}
+.modal-x {
+  background: none; border: none; cursor: pointer;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); color: var(--muted); font-size: 18px;
+  transition: var(--transition);
+}
+.modal-x:hover { background: var(--surface-2); color: var(--text); }
+
+/* ── FORM CONTROLS ── */
+.fg { margin-bottom: 14px; }
+.fl {
+  font-size: 12px; font-weight: 700; color: var(--text);
+  margin-bottom: 5px; display: block;
+  font-family: 'Inter', sans-serif; letter-spacing: .01em;
+}
+.fl span { color: var(--red); margin-left: 2px; }
+.fc {
+  width: 100%; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 12px;
+  font-size: 13px; color: var(--text);
+  font-family: 'DM Sans', inherit;
+  background: var(--card); transition: border 0.15s, box-shadow 0.15s;
+}
+.fc:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-glow);
+}
+.fr { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.factions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 1.25rem; padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: linear-gradient(135deg, #0F172A, #1E293B);
+  color: #fff; border-radius: var(--radius-md);
+  padding: 13px 20px; font-size: 13px;
+  z-index: 9999; display: flex; align-items: center; gap: 10px;
+  opacity: 0; transform: translateY(12px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
+  pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.08);
+  font-weight: 500;
+}
+#toast.show { opacity: 1; transform: translateY(0) scale(1); }
+#toast.toast-warn { background: linear-gradient(135deg, #92400E, #B45309); }
+#toast.toast-err { background: linear-gradient(135deg, #991B1B, #B91C1C); }
+
+/* ── SAVE BADGE ── */
+.save-badge {
+  position: fixed; top: 16px; right: 24px;
+  background: linear-gradient(135deg, #059669, #10B981);
+  color: #fff; border-radius: 20px;
+  padding: 6px 16px; font-size: 12px; font-weight: 700;
+  z-index: 9999; opacity: 0;
+  transition: all 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+  pointer-events: none;
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 4px 16px rgba(5,150,105,.4);
+  font-family: 'Inter', sans-serif;
+}
+.save-badge.show { opacity: 1; }
+
+/* ── MONTH TABS ── */
+.month-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.mtab {
+  padding: 6px 12px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card); color: var(--muted);
+  transition: var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+.mtab:hover { background: var(--surface-1); color: var(--text); }
+.mtab.active {
+  background: var(--blue); color: #fff; border-color: var(--blue);
+  box-shadow: var(--shadow-colored);
+}
+
+/* ── CALENDAR ── */
+.cal-head { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px; }
+.cal-head-cell {
+  font-size: 10px; color: var(--muted); text-align: center;
+  padding: 4px; font-weight: 700;
+  font-family: 'Inter', sans-serif; letter-spacing: .04em;
+}
+.cal-body { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-day {
+  min-height: 46px; border-radius: var(--radius-sm);
+  font-size: 11px; text-align: center; padding: 5px 3px 3px;
+  color: var(--text); position: relative; cursor: default;
+  transition: var(--transition);
+  border: 1px solid transparent;
+}
+.cal-day:hover:not(.other) {
+  background: var(--surface-2) !important;
+  border-color: var(--border);
+  transform: scale(1.04);
+}
+.cal-day .cal-num { font-weight: 700; font-size: 12px; }
+.cal-day.today {
+  background: linear-gradient(135deg, var(--blue), var(--blue-vivid)) !important;
+  color: #fff;
+  box-shadow: var(--shadow-colored);
+}
+.cal-day.today .cal-conge-dot { background: rgba(255,255,255,.6); }
+.cal-day.has-conge { background: #DBEAFE; }
+.cal-day.has-approuve { background: #D1FAE5; }
+.cal-day.has-attente { background: #FEF3C7; }
+.cal-day.has-mixed { background: #DBEAFE; }
+.cal-day.other { color: #CBD5E1; }
+.cal-conge-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--blue); margin: 2px auto 0;
+}
+.cal-conge-names {
+  font-size: 8px; color: #1D4ED8; line-height: 1.1;
+  margin-top: 1px; overflow: hidden; max-height: 18px;
+}
+.cal-day-count {
+  font-size: 9px; background: var(--blue); color: #fff;
+  border-radius: 10px; padding: 0 4px;
+  display: inline-block; margin-top: 1px;
+}
+
+/* ── TIMELINE ── */
+.tl-item { display: flex; gap: 12px; margin-bottom: 14px; }
+.tl-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.tl-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.tl-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ── NEXT CARD (Congé timeline) ── */
+.next-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: .925rem 1rem;
+  margin-bottom: 8px; cursor: pointer;
+  transition: var(--transition);
+  background: var(--card);
+}
+.next-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--blue);
+  transform: translateX(3px);
+}
+.next-card-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.next-card-dates { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.next-card-dur { font-size: 11px; font-weight: 700; color: var(--blue); margin-top: 4px; }
+
+/* ── PERSONNEL CARDS ── */
+.p-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.p-card {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  padding: 1.25rem;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.p-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #CBD5E1;
+  transform: translateY(-2px);
+}
+.p-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 14px; flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+}
+.p-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.p-pos { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.p-detail {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--muted); margin-top: 7px;
+}
+.p-detail i { font-size: 14px; color: var(--blue); flex-shrink: 0; }
+
+/* ── GANTT ── */
+.gantt-wrap { overflow-x: auto; padding-bottom: 4px; }
+.gantt-row {
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid #F8FAFC; min-height: 34px;
+  transition: background 0.15s;
+}
+.gantt-row:hover { background: var(--surface-1); }
+.gantt-row:last-child { border-bottom: none; }
+.gantt-label {
+  width: 140px; min-width: 140px;
+  padding: 4px 10px 4px 0; font-size: 11px;
+  color: var(--text); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; font-weight: 600; flex-shrink: 0;
+}
+.gantt-label .gantt-svc { font-size: 10px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+.gantt-track {
+  flex: 1; position: relative; height: 22px;
+  background: var(--surface-2); border-radius: 4px; min-width: 400px;
+}
+.gantt-bar {
+  position: absolute; height: 18px; top: 2px;
+  border-radius: 5px; cursor: default;
+  transition: opacity 0.2s, filter 0.2s;
+  display: flex; align-items: center;
+  padding: 0 7px; font-size: 9px; font-weight: 700;
+  color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gantt-bar:hover { opacity: .85; filter: brightness(1.1); z-index: 10; }
+.gantt-bar.s-approuve { background: linear-gradient(90deg, #059669, #10B981); }
+.gantt-bar.s-attente { background: linear-gradient(90deg, #D97706, #F59E0B); }
+.gantt-bar.s-refuse { background: linear-gradient(90deg, #DC2626, #EF4444); }
+.gantt-months-header { display: flex; margin-bottom: 6px; padding-left: 140px; }
+.gantt-mh {
+  flex: 1; font-size: 10px; color: var(--muted);
+  text-align: center; font-weight: 700; min-width: 30px;
+  font-family: 'Inter', sans-serif;
+}
+.gantt-today-line {
+  position: absolute; top: 0; bottom: 0;
+  width: 2px; background: var(--blue); opacity: .6; z-index: 5; pointer-events: none;
+  box-shadow: 0 0 6px rgba(2,132,199,.4);
+}
+
+/* ── HEATMAP ── */
+.heatmap-grid {
+  display: grid; grid-template-columns: auto repeat(12, 1fr);
+  gap: 3px; font-size: 11px;
+}
+.hm-label {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 8px; color: var(--muted); font-weight: 700;
+  white-space: nowrap; font-family: 'Inter', sans-serif;
+}
+.hm-cell {
+  height: 34px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; cursor: default;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.hm-cell:hover {
+  transform: scale(1.12);
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+.hm-header {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--muted); padding: 4px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── STATUT BADGES CONGÉ ── */
+.conge-stat-row {
+  display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap; margin-bottom: 1rem;
+}
+.csr-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.csr-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── VIEW TOGGLE ── */
+.view-toggle {
+  display: flex; background: var(--surface-2);
+  border-radius: 10px; padding: 3px; gap: 2px;
+}
+.vt-btn {
+  padding: 6px 14px; border-radius: 8px;
+  border: none; background: transparent;
+  font-size: 12px; font-weight: 600;
+  color: var(--muted); cursor: pointer;
+  transition: var(--transition);
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'DM Sans', sans-serif;
+}
+.vt-btn.active {
+  background: var(--card); color: var(--text);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── MONTH NAV ── */
+.month-nav { display: flex; align-items: center; gap: 8px; }
+.mnav-btn {
+  width: 28px; height: 28px;
+  border-radius: 7px; border: 1px solid var(--border);
+  background: var(--card); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 14px; transition: var(--transition);
+}
+.mnav-btn:hover { background: var(--surface-2); color: var(--text); box-shadow: var(--shadow-sm); }
+.mnav-label {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  min-width: 110px; text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── STAGGERED ANIMATIONS for KPI on load ── */
+.kpi-grid .kpi:nth-child(1) { animation: kpiSlide 0.4s ease 0.05s both; }
+.kpi-grid .kpi:nth-child(2) { animation: kpiSlide 0.4s ease 0.12s both; }
+.kpi-grid .kpi:nth-child(3) { animation: kpiSlide 0.4s ease 0.19s both; }
+.kpi-grid .kpi:nth-child(4) { animation: kpiSlide 0.4s ease 0.26s both; }
+
+@keyframes kpiSlide {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Stagger cards */
+.conge-kpi-grid .ckpi:nth-child(1) { animation: kpiSlide 0.4s ease 0.05s both; }
+.conge-kpi-grid .ckpi:nth-child(2) { animation: kpiSlide 0.4s ease 0.1s both; }
+.conge-kpi-grid .ckpi:nth-child(3) { animation: kpiSlide 0.4s ease 0.15s both; }
+.conge-kpi-grid .ckpi:nth-child(4) { animation: kpiSlide 0.4s ease 0.2s both; }
+
+/* ── SCROLLBAR STYLING ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1280px) {
+  .charts-row-3 { grid-template-columns: 1fr 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1024px) {
+  .conge-kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  :root { --sw: 60px; }
+  .sb-name, .sb-sub, .nav-item span, .nav-sec { display: none; }
+  .nav-item { justify-content: center; }
+  .charts-row, .charts-row-3, .fr, .conge-main { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .main { padding: 1rem; }
+  .gantt-label { width: 90px; min-width: 90px; }
+  .gantt-track { min-width: 260px; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .conge-kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── SECTION DIVIDERS ── */
+.section-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 1.5rem 0 1.25rem;
+  font-size: 11px; font-weight: 700;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: .08em; font-family: 'Inter', sans-serif;
+}
+.section-divider::before, .section-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: var(--border);
+}
+
+/* ── CHART MODERNIZATION ── */
+canvas {
+  border-radius: var(--radius-sm);
+}
+
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* Shimmer loading effect for cards */
+.kpi-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmerLoad 1.5s infinite;
+}
+@keyframes shimmerLoad {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Smooth row hover for table */
+tr { transition: background 0.15s; }
+
+/* Print-quality number styling */
+.kpi-val, .ckpi-val {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Enhanced card shadow on active nav */
+.nav-item.active .ti {
+  filter: drop-shadow(0 0 6px rgba(56,189,248,0.5));
+}
+
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">DRO</div>
+    <div class="sb-name">Direction des Ressources<br>Opérationnelles</div>
+    <div class="sb-sub">Tableau de bord stratégique</div>
+  </div>
+  <div class="nav-sec">Tableau de bord</div>
+  <button class="nav-item active" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i><span>Vue générale</span></button>
+  <button class="nav-item" onclick="nav('actions',this)"><i class="ti ti-checkbox"></i><span>Actions</span></button>
+  <div class="nav-sec">Ressources humaines</div>
+  <button class="nav-item" onclick="nav('conges',this)"><i class="ti ti-beach"></i><span>Congés</span></button>
+  <button class="nav-item" onclick="nav('personnel',this)"><i class="ti ti-users"></i><span>Personnel</span></button>
+  <div class="sb-footer">
+    <div class="sb-save-indicator" id="sb-save"><i class="ti ti-device-floppy" style="font-size:14px;color:#334155"></i><span>Données locales</span></div>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="tab-pane active">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-title">Vue générale</div>
+      <div class="ph-sub" id="dash-date"></div>
+    </div>
+    <div class="ph-right">
+      <button class="btn btn-outline" onclick="nav('actions',document.querySelector('.nav-item:nth-child(5)'))"><i class="ti ti-list"></i> Toutes les actions</button>
+      <button class="btn btn-primary" onclick="openModal('action','')"><i class="ti ti-plus"></i> Nouvelle action</button>
+    </div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--blue)"></div>
+      <div class="kpi-icon" style="background:var(--blue-l)"><i class="ti ti-list-check" style="color:var(--blue)"></i></div>
+      <div class="kpi-val" id="k-total">—</div>
+      <div class="kpi-label">Total actions</div>
+      <div class="kpi-foot" id="k-total-f">— directions concernées</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--red)"></div>
+      <div class="kpi-icon" style="background:var(--red-l)"><i class="ti ti-alert-triangle" style="color:var(--red)"></i></div>
+      <div class="kpi-val" id="k-haute">—</div>
+      <div class="kpi-label">Haute priorité</div>
+      <div class="kpi-foot" id="k-haute-f">—% du total</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:#EA580C"></div>
+      <div class="kpi-icon" style="background:#FFF7ED"><i class="ti ti-flame" style="color:#EA580C"></i></div>
+      <div class="kpi-val" id="k-crit">—</div>
+      <div class="kpi-label">Criticité importante</div>
+      <div class="kpi-foot" id="k-crit-f">actions à surveiller</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--green)"></div>
+      <div class="kpi-icon" style="background:var(--green-l)"><i class="ti ti-trending-up" style="color:var(--green)"></i></div>
+      <div class="kpi-val" id="k-av">—</div>
+      <div class="kpi-label">Avancement moyen</div>
+      <div class="kpi-foot" id="k-av-f">— actions démarrées</div>
+    </div>
+  </div>
+  <div class="charts-row-3">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-bar"></i> Actions par direction</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-dir" aria-label="Actions par direction"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-donut"></i> Statuts</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-status" aria-label="Répartition des statuts"></canvas></div>
+      <div id="status-legend" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-pie"></i> Priorités</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-prio" aria-label="Répartition des priorités"></canvas></div>
+      <div id="prio-legend" style="margin-top:12px"></div>
+    </div>
+  </div>
+  <div class="tcard">
+    <div class="thead"><div class="thead-title"><i class="ti ti-table"></i> Résumé par direction</div></div>
+    <div class="tscroll"><table><thead><tr><th>Direction</th><th>Total</th><th>Avancement</th><th>En cours</th><th>Terminées</th><th>Haute priorité</th><th>Critiques</th></tr></thead><tbody id="sum-body"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ACTIONS -->
+<div id="tab-actions" class="tab-pane">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-title">Suivi des actions</div>
+      <div class="ph-sub">Cliquez sur une ligne pour modifier · <span id="a-count-sub"></span></div>
+    </div>
+    <div class="ph-right">
+      <button class="btn btn-outline" onclick="exportCSV()"><i class="ti ti-download"></i> CSV</button>
+      <button class="btn btn-primary" onclick="openModal('action','')"><i class="ti ti-plus"></i> Nouvelle action</button>
+    </div>
+  </div>
+  <div class="filters">
+    <input type="text" class="fsearch" id="f-search" placeholder="🔍  Rechercher une action…" oninput="filterActions()">
+    <select class="fsel" id="f-dir" onchange="filterActions()"><option value="">Toutes directions</option></select>
+    <select class="fsel" id="f-stat" onchange="filterActions()"><option value="">Tous statuts</option><option>Non démarré</option><option>En cours</option><option>Terminé</option><option>Bloqué</option></select>
+    <select class="fsel" id="f-prio" onchange="filterActions()"><option value="">Toutes priorités</option><option>Haute</option><option>Moyenne</option></select>
+    <select class="fsel" id="f-crit" onchange="filterActions()"><option value="">Toutes criticités</option><option>Importante</option><option>Normale</option></select>
+  </div>
+  <div class="tcard">
+    <div class="thead"><div class="thead-title"><i class="ti ti-clipboard-list"></i> <span id="a-count">—</span></div>
+    <button class="btn btn-outline btn-sm" onclick="resetFilters()"><i class="ti ti-x"></i> Réinitialiser</button></div>
+    <div class="tscroll">
+    <table id="actions-table">
+      <thead><tr>
+        <th onclick="sortBy('dir')">Direction <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th>Action</th>
+        <th onclick="sortBy('resp')">Responsable <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th onclick="sortBy('date')">Échéance <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th onclick="sortBy('prio')">Priorité <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th>Criticité</th>
+        <th onclick="sortBy('statut')">Statut <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th onclick="sortBy('avance')">Avancement <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th></th>
+      </tr></thead>
+      <tbody id="actions-body"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- CONGÉS -->
+<div id="tab-conges" class="tab-pane">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-title">Gestion des congés</div>
+      <div class="ph-sub">Planning annuel 2026–2027 — DRO, QHSE, SMTI, SM</div>
+    </div>
+    <div class="ph-right">
+      <button class="btn btn-outline" onclick="exportCongesCSV()"><i class="ti ti-download"></i> Exporter CSV</button>
+      <button class="btn btn-primary" onclick="openModal('conge','')"><i class="ti ti-plus"></i> Nouveau congé</button>
+    </div>
+  </div>
+
+  <!-- KPIs congés -->
+  <div class="conge-kpi-grid" id="cg-kpi-row">
+    <div class="ckpi">
+      <div class="ckpi-accent" style="background:#10B981"></div>
+      <div class="ckpi-val" id="ck-encours">—</div>
+      <div class="ckpi-label">En cours actuellement</div>
+      <div class="ckpi-sub" id="ck-encours-s">agents absents aujourd'hui</div>
+    </div>
+    <div class="ckpi">
+      <div class="ckpi-accent" style="background:var(--blue)"></div>
+      <div class="ckpi-val" id="ck-avenir">—</div>
+      <div class="ckpi-label">À venir (30 jours)</div>
+      <div class="ckpi-sub" id="ck-avenir-s">congés planifiés</div>
+    </div>
+    <div class="ckpi">
+      <div class="ckpi-accent" style="background:var(--amber)"></div>
+      <div class="ckpi-val" id="ck-attente">—</div>
+      <div class="ckpi-label">En attente d'approbation</div>
+      <div class="ckpi-sub">à valider</div>
+    </div>
+    <div class="ckpi">
+      <div class="ckpi-accent" style="background:var(--green)"></div>
+      <div class="ckpi-val" id="ck-appro">—</div>
+      <div class="ckpi-label">Taux d'approbation</div>
+      <div class="ckpi-sub" id="ck-appro-s">— approuvés / — total</div>
+    </div>
+  </div>
+
+  <!-- Vue Calendrier + Prochains congés -->
+  <div class="charts-row" style="margin-bottom:1.25rem">
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title" style="margin:0"><i class="ti ti-calendar-month"></i> Calendrier — <span id="cal-label"></span></div>
+        <div class="month-nav">
+          <button class="mnav-btn" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button>
+          <span class="mnav-label" id="cal-label-nav"></span>
+          <button class="mnav-btn" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+      <!-- Légende -->
+      <div class="conge-stat-row" style="margin-top:10px;margin-bottom:8px">
+        <div class="csr-item"><div class="csr-dot" style="background:#10B981"></div>Approuvé</div>
+        <div class="csr-item"><div class="csr-dot" style="background:#F59E0B"></div>En attente</div>
+        <div class="csr-item"><div class="csr-dot" style="background:#EF4444"></div>Refusé</div>
+        <div class="csr-item"><div class="csr-dot" style="background:var(--blue)"></div>Aujourd'hui</div>
+      </div>
+      <div class="cal-head" id="cal-h"></div>
+      <div class="cal-body" id="cal-b"></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-title-row">
+        <div class="card-title" style="margin:0"><i class="ti ti-clock"></i> Prochains congés</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select class="fsel" id="cg-filt-svc" onchange="renderCongeTab()" style="font-size:12px;padding:5px 9px"><option value="">Tous services</option><option>SMTI</option><option>QHSE</option><option>SM</option><option>DRO</option></select>
+          <select class="fsel" id="cg-filt-stat-tl" onchange="renderCongeTimeline()" style="font-size:12px;padding:5px 9px"><option value="">Tous statuts</option><option>Approuvé</option><option>En attente</option><option>Refusé</option></select>
+        </div>
+      </div>
+      <div id="conge-tl" style="flex:1;overflow-y:auto;margin-top:1rem;max-height:300px"></div>
+    </div>
+  </div>
+
+  <!-- Vue Gantt + Heatmap avec toggle -->
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-title-row">
+      <div class="card-title" style="margin:0"><i class="ti ti-chart-gantt"></i> Planning — Vue Gantt / Heatmap</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="fsel" id="gantt-filt-year" onchange="renderGanttHeatmap()" style="font-size:12px;padding:5px 9px">
+          <option value="2026">2026</option><option value="2027">2027</option>
+        </select>
+        <select class="fsel" id="gantt-filt-svc" onchange="renderGanttHeatmap()" style="font-size:12px;padding:5px 9px">
+          <option value="">Tous services</option><option>SMTI</option><option>QHSE</option><option>SM</option><option>DRO</option>
+        </select>
+        <div class="view-toggle">
+          <button class="vt-btn active" id="vt-gantt" onclick="switchView('gantt')"><i class="ti ti-layout-rows"></i> Gantt</button>
+          <button class="vt-btn" id="vt-heat" onclick="switchView('heat')"><i class="ti ti-grid-4x4"></i> Heatmap</button>
+        </div>
+      </div>
+    </div>
+    <div id="gantt-view">
+      <div class="gantt-months-header" id="gantt-mheader"></div>
+      <div class="gantt-wrap">
+        <div id="gantt-body" style="min-width:540px"></div>
+      </div>
+    </div>
+    <div id="heat-view" style="display:none">
+      <div id="heatmap-legend" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:11px;color:var(--muted)">
+        Intensité (nb d'agents absents) :
+        <div style="display:flex;gap:3px;align-items:center">
+          <div style="width:20px;height:14px;border-radius:3px;background:#F0FDF4"></div><span>0</span>
+          <div style="width:20px;height:14px;border-radius:3px;background:#6EE7B7"></div><span>1-2</span>
+          <div style="width:20px;height:14px;border-radius:3px;background:#10B981"></div><span>3-5</span>
+          <div style="width:20px;height:14px;border-radius:3px;background:#059669"></div><span>6-9</span>
+          <div style="width:20px;height:14px;border-radius:3px;background:#047857"></div><span>10+</span>
+        </div>
+      </div>
+      <div class="heatmap-grid" id="heatmap-body"></div>
+    </div>
+  </div>
+
+  <!-- Filtres + Table -->
+  <div class="filters" style="margin-bottom:1rem">
+    <select class="fsel" id="f-cg-svc" onchange="renderCongesTable()"><option value="">Tous services</option><option>SMTI</option><option>QHSE</option><option>SM</option><option>DRO</option></select>
+    <select class="fsel" id="f-cg-stat" onchange="renderCongesTable()"><option value="">Tous statuts</option><option>Approuvé</option><option>En attente</option><option>Refusé</option></select>
+    <select class="fsel" id="f-cg-type" onchange="renderCongesTable()"><option value="">Tous types</option><option>Congé annuel</option><option>Congé maladie</option><option>Congé maternité/paternité</option><option>Congé formation</option><option>Récupération</option><option>Autre</option></select>
+    <input type="text" class="fsearch" id="f-cg-search" placeholder="🔍  Rechercher un agent…" oninput="renderCongesTable()" style="min-width:160px">
+  </div>
+  <div class="tcard">
+    <div class="thead">
+      <div class="thead-title"><i class="ti ti-beach"></i> <span id="cg-count">—</span></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-approve" onclick="bulkApprove()" title="Approuver la sélection"><i class="ti ti-check"></i> Approuver tout</button>
+      </div>
+    </div>
+    <div class="tscroll">
+    <table>
+      <thead><tr>
+        <th onclick="sortCongesBy('nom')">Agent <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th>Service</th>
+        <th>Type</th>
+        <th onclick="sortCongesBy('debut')">Départ <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th onclick="sortCongesBy('fin')">Retour <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th onclick="sortCongesBy('dur')">Durée <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th onclick="sortCongesBy('statut')">Statut <i class="ti ti-selector" style="font-size:10px"></i></th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="conges-body"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Charts (par mois + par service) -->
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-bar"></i> Congés par mois</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-cg-month" aria-label="Congés par mois"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-donut"></i> Répartition par service</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-cg-svc" aria-label="Congés par service"></canvas></div>
+      <div id="cg-svc-legend" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PERSONNEL -->
+<div id="tab-personnel" class="tab-pane">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-title">Personnel</div>
+      <div class="ph-sub">Répertoire DRO, QHSE, SMTI, SM — <span id="p-count-sub"></span></div>
+    </div>
+    <div class="ph-right">
+      <button class="btn btn-outline" onclick="exportPersonnelCSV()"><i class="ti ti-download"></i> CSV</button>
+      <button class="btn btn-primary" onclick="openModal('personnel','')"><i class="ti ti-user-plus"></i> Ajouter un agent</button>
+    </div>
+  </div>
+
+  <!-- KPIs Personnel -->
+  <div class="kpi-grid" id="p-kpi-grid" style="margin-bottom:1.25rem">
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--blue)"></div>
+      <div class="kpi-icon" style="background:var(--blue-l)"><i class="ti ti-users" style="color:var(--blue)"></i></div>
+      <div class="kpi-val" id="pk-total">—</div>
+      <div class="kpi-label">Total agents</div>
+      <div class="kpi-foot" id="pk-total-f">— services</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:#7C3AED"></div>
+      <div class="kpi-icon" style="background:#F5F3FF"><i class="ti ti-building" style="color:#7C3AED"></i></div>
+      <div class="kpi-val" id="pk-smti">—</div>
+      <div class="kpi-label">SMTI</div>
+      <div class="kpi-foot" id="pk-smti-f">agents</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--green)"></div>
+      <div class="kpi-icon" style="background:var(--green-l)"><i class="ti ti-shield-check" style="color:var(--green)"></i></div>
+      <div class="kpi-val" id="pk-qhse">—</div>
+      <div class="kpi-label">QHSE</div>
+      <div class="kpi-foot" id="pk-qhse-f">agents</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:var(--amber)"></div>
+      <div class="kpi-icon" style="background:var(--amber-l)"><i class="ti ti-ruler-measure" style="color:var(--amber)"></i></div>
+      <div class="kpi-val" id="pk-sm">—</div>
+      <div class="kpi-label">SM</div>
+      <div class="kpi-foot" id="pk-sm-f">agents</div>
+    </div>
+  </div>
+
+  <!-- Charts Personnel -->
+  <div class="charts-row" style="margin-bottom:1.25rem">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-bar"></i> Agents par fonction</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-p-fonc"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-calendar-stats"></i> Départs à venir (12 mois)</div>
+      <div id="p-departs-list" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+  </div>
+
+  <!-- Filtres + vue toggle -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
+    <div class="filters" style="margin-bottom:0;flex:1">
+      <select class="fsel" id="f-p-svc" onchange="renderPersonnel()"><option value="">Tous services</option><option>SMTI</option><option>QHSE</option><option>SM</option><option>DRO</option></select>
+      <select class="fsel" id="f-p-fonc" onchange="renderPersonnel()"><option value="">Toutes fonctions</option></select>
+      <input type="text" class="fsearch" id="f-p-search" placeholder="🔍  Rechercher nom, matricule…" oninput="renderPersonnel()">
+    </div>
+    <div class="view-toggle">
+      <button class="vt-btn active" id="vt-p-table" onclick="switchPView('table')"><i class="ti ti-table"></i> Tableau</button>
+      <button class="vt-btn" id="vt-p-cards" onclick="switchPView('cards')"><i class="ti ti-layout-grid"></i> Cartes</button>
+    </div>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div id="p-table-view">
+    <div class="tcard">
+      <div class="thead">
+        <div class="thead-title"><i class="ti ti-users"></i> <span id="p-count-sub"></span></div>
+      </div>
+      <div class="tscroll">
+        <table>
+          <thead><tr>
+            <th onclick="sortPersonnelBy('nom')">Agent <i class="ti ti-selector" style="font-size:10px"></i></th>
+            <th onclick="sortPersonnelBy('matricule')">Matricule <i class="ti ti-selector" style="font-size:10px"></i></th>
+            <th onclick="sortPersonnelBy('service')">Service <i class="ti ti-selector" style="font-size:10px"></i></th>
+            <th onclick="sortPersonnelBy('fonction')">Fonction <i class="ti ti-selector" style="font-size:10px"></i></th>
+            <th onclick="sortPersonnelBy('dateDepart')">Départ souhaité <i class="ti ti-selector" style="font-size:10px"></i></th>
+            <th>Congé</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="p-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARDS VIEW -->
+  <div id="p-cards-view" style="display:none">
+    <div class="p-grid" id="p-grid"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- MODALS -->
+<div class="overlay" id="m-action" onclick="if(event.target===this)closeModal('action')">
+  <div class="modal">
+    <div class="modal-title"><span id="ma-title">Nouvelle action</span><button class="modal-x" onclick="closeModal('action')"><i class="ti ti-x"></i></button></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Direction <span>*</span></label>
+        <select class="fc" id="a-dir"><option>DRO</option><option>QHSE</option><option>CHS</option><option>SMTI</option><option>SM</option><option>MFD</option><option>EAF</option><option>MS</option><option>MF</option><option>NCC</option><option>VN</option><option>IPD</option></select></div>
+      <div class="fg"><label class="fl">Responsable</label><input class="fc" id="a-resp" type="text" placeholder="Nom / initiales"></div>
+    </div>
+    <div class="fg"><label class="fl">Description <span>*</span></label><textarea class="fc" id="a-desc" rows="3" placeholder="Décrire l'action à réaliser…"></textarea></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Date d'échéance</label><input class="fc" id="a-date" type="date"></div>
+      <div class="fg"><label class="fl">Avancement (%)</label><input class="fc" id="a-av" type="number" min="0" max="100" value="0"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Priorité</label><select class="fc" id="a-prio"><option>Moyenne</option><option>Haute</option></select></div>
+      <div class="fg"><label class="fl">Criticité</label><select class="fc" id="a-crit"><option>Normale</option><option>Importante</option></select></div>
+    </div>
+    <div class="fg"><label class="fl">Statut</label>
+      <select class="fc" id="a-stat"><option>Non démarré</option><option>En cours</option><option>Terminé</option><option>Bloqué</option></select></div>
+    <div class="fg"><label class="fl">Commentaire</label><input class="fc" id="a-com" type="text" placeholder="Notes…"></div>
+    <input type="hidden" id="a-idx">
+    <div class="factions">
+      <button class="btn btn-outline" onclick="closeModal('action')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveAction()"><i class="ti ti-check"></i> Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-conge" onclick="if(event.target===this)closeModal('conge')">
+  <div class="modal">
+    <div class="modal-title"><span>Congé / Absence</span><button class="modal-x" onclick="closeModal('conge')"><i class="ti ti-x"></i></button></div>
+    <div class="fg"><label class="fl">Nom de l'agent <span>*</span></label><input class="fc" id="c-nom" type="text" placeholder="Prénom NOM"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Service</label>
+        <select class="fc" id="c-svc"><option>SMTI</option><option>QHSE</option><option>SM</option><option>DRO</option></select></div>
+      <div class="fg"><label class="fl">Type</label>
+        <select class="fc" id="c-type"><option>Congé annuel</option><option>Congé maladie</option><option>Congé maternité/paternité</option><option>Congé formation</option><option>Récupération</option><option>Autre</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Date de début <span>*</span></label><input class="fc" id="c-deb" type="date"></div>
+      <div class="fg"><label class="fl">Date de fin <span>*</span></label><input class="fc" id="c-fin" type="date"></div>
+    </div>
+    <div class="fg"><label class="fl">Statut</label>
+      <select class="fc" id="c-stat"><option>En attente</option><option>Approuvé</option><option>Refusé</option></select></div>
+    <div class="fg"><label class="fl">Commentaire</label><input class="fc" id="c-com" type="text" placeholder="Motif ou note…"></div>
+    <input type="hidden" id="c-idx">
+    <div class="factions">
+      <button class="btn btn-outline" onclick="closeModal('conge')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveConge()"><i class="ti ti-check"></i> Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-personnel" onclick="if(event.target===this)closeModal('personnel')">
+  <div class="modal">
+    <div class="modal-title"><span>Agent / Personnel</span><button class="modal-x" onclick="closeModal('personnel')"><i class="ti ti-x"></i></button></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Prénom <span>*</span></label><input class="fc" id="p-prenom" type="text" placeholder="Prénom"></div>
+      <div class="fg"><label class="fl">Nom <span>*</span></label><input class="fc" id="p-nom" type="text" placeholder="NOM"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Matricule</label><input class="fc" id="p-mat" type="text" placeholder="ex: 0151"></div>
+      <div class="fg"><label class="fl">Service</label>
+        <select class="fc" id="p-svc"><option>SMTI</option><option>QHSE</option><option>SM</option><option>DRO</option></select></div>
+    </div>
+    <div class="fg"><label class="fl">Fonction / Poste</label><input class="fc" id="p-fct" type="text" placeholder="ex: Responsable Qualité"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Email</label><input class="fc" id="p-email" type="email" placeholder="prenom.nom@ipd.sn"></div>
+      <div class="fg"><label class="fl">Téléphone</label><input class="fc" id="p-tel" type="tel" placeholder="+221 77 …"></div>
+    </div>
+    <input type="hidden" id="p-idx">
+    <div class="factions">
+      <button class="btn btn-outline" onclick="closeModal('personnel')">Annuler</button>
+      <button class="btn btn-primary" onclick="savePersonnel()"><i class="ti ti-check"></i> Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><i class="ti ti-check"></i><span id="toast-msg"></span></div>
+<div class="save-badge" id="save-badge"><i class="ti ti-device-floppy"></i> Sauvegardé</div>
+
+<script>
+// ═══════════════ DEFAULT DATA ═══════════════
+
+const DEFAULT_PERSONNEL = [{"nom": "Ousmane DIALLO", "matricule": "582", "fonction": "Ingénieur Projet", "service": "SMTI", "dateDepart": "2026-12-29", "statut": "En attente", "comment": ""}, {"nom": "Ibrahima SARR", "matricule": "580P", "fonction": "Ingénieur Projet", "service": "SMTI", "dateDepart": "2026-04-24", "statut": "En attente", "comment": ""}, {"nom": "Aissatou NDIAYE", "matricule": "282", "fonction": "Assistante STI", "service": "SMTI", "dateDepart": "2026-07-10", "statut": "En attente", "comment": ""}, {"nom": "Zakaria BARRY", "matricule": "491", "fonction": "Assistant Admin", "service": "SMTI", "dateDepart": "2026-12-01", "statut": "En attente", "comment": ""}, {"nom": "Abdou Magib FALL", "matricule": "288", "fonction": "Chauffeur AG", "service": "SMTI", "dateDepart": "2026-08-01", "statut": "En attente", "comment": ""}, {"nom": "Mamadou SYLLA", "matricule": "586", "fonction": "Chauffeur Mécanicien", "service": "SMTI", "dateDepart": "2026-05-20", "statut": "En attente", "comment": ""}, {"nom": "Djiby FAYE", "matricule": "585", "fonction": "Chauffeur Mécanicien", "service": "SMTI", "dateDepart": "2026-11-15", "statut": "En attente", "comment": ""}, {"nom": "Pape Ngolan DIAO", "matricule": "1054", "fonction": "Assistant  Mécanicien", "service": "SMTI", "dateDepart": "2027-07-14", "statut": "En attente", "comment": ""}, {"nom": "Pape Diarga CISSE", "matricule": "175P", "fonction": "Electro mécanicien", "service": "SMTI", "dateDepart": "2026-11-10", "statut": "En attente", "comment": ""}, {"nom": "Mouhamadou DIALLO", "matricule": "489", "fonction": "Electro mécanicien", "service": "SMTI", "dateDepart": "2026-08-15", "statut": "En attente", "comment": ""}, {"nom": "Lamine NDIAYE", "matricule": "756", "fonction": "Electro mécanicien", "service": "SMTI", "dateDepart": "2026-12-07", "statut": "En attente", "comment": ""}, {"nom": "Mamadou NDOUR", "matricule": "N/A", "fonction": "Electro mécanicien", "service": "SMTI", "dateDepart": "2027-03-08", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Youssou NDIAYE", "matricule": "739", "fonction": "Plombier", "service": "SMTI", "dateDepart": "2027-02-10", "statut": "En attente", "comment": ""}, {"nom": "Mouhamadou FALL", "matricule": "N/A", "fonction": "Menuisier Métallique", "service": "SMTI", "dateDepart": "2027-01-01", "statut": "En attente", "comment": ""}, {"nom": "Manel NYAFOUNA", "matricule": "749", "fonction": "Menuisier Bois", "service": "SMTI", "dateDepart": "2026-05-07", "statut": "En attente", "comment": ""}, {"nom": "Abdoulaye DIENG", "matricule": "N/A", "fonction": "Jardinnier", "service": "SMTI", "dateDepart": "2027-06-10", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Gora FAYE", "matricule": "N/A", "fonction": "Jardinnier", "service": "SMTI", "dateDepart": "2027-07-10", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Abdou FAYE", "matricule": "690", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-06-15", "statut": "En attente", "comment": ""}, {"nom": "Abdoulaye FAYE", "matricule": "1366", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-05-18", "statut": "En attente", "comment": ""}, {"nom": "Abdoulaye SOW", "matricule": "595", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-12-15", "statut": "En attente", "comment": ""}, {"nom": "Demba GUEYE", "matricule": "594", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-05-15", "statut": "En attente", "comment": ""}, {"nom": "Omar DIALLO", "matricule": "N/A", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-12-26", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Mame Mor DIOUF", "matricule": "1293", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-06-25", "statut": "En attente", "comment": ""}, {"nom": "Bidiel FALL", "matricule": "188", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-04-06", "statut": "En attente", "comment": ""}, {"nom": "Mamadou BEYE", "matricule": "N/A", "fonction": "Maintenancier", "service": "SMTI", "dateDepart": "2027-09-17", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Abdoulaye  KANE", "matricule": "823", "fonction": "Maintenancier", "service": "SMTI", "dateDepart": "2026-11-20", "statut": "En attente", "comment": ""}, {"nom": "Jacques DIALLO", "matricule": "821", "fonction": "Maintenancier", "service": "SMTI", "dateDepart": "2026-12-15", "statut": "En attente", "comment": ""}, {"nom": "Amadou Bassel NDIAYE", "matricule": "1708", "fonction": "Chauffeur Transit", "service": "SMTI", "dateDepart": "2026-11-15", "statut": "En attente", "comment": ""}, {"nom": "Ibrahima BALDE", "matricule": "1368", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-09-15", "statut": "En attente", "comment": ""}, {"nom": "Mor DIOUF", "matricule": "1709", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-08-15", "statut": "En attente", "comment": ""}, {"nom": "Abdou DIOP", "matricule": "1735", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-12-20", "statut": "En attente", "comment": ""}, {"nom": "Ibrahima DIOP", "matricule": "1736", "fonction": "Chauffeur", "service": "SMTI", "dateDepart": "2026-08-10", "statut": "En attente", "comment": ""}, {"nom": "Alhamdou KANTE", "matricule": "1737", "fonction": "Chauffeur BUS", "service": "SMTI", "dateDepart": "2026-09-10", "statut": "En attente", "comment": ""}, {"nom": "Kabou THIAM", "matricule": "1734", "fonction": "Chauffeur BUS", "service": "SMTI", "dateDepart": "2026-12-01", "statut": "En attente", "comment": ""}, {"nom": "Boubacar BAH", "matricule": "1733", "fonction": "Chauffeur BUS", "service": "SMTI", "dateDepart": "2026-09-17", "statut": "En attente", "comment": ""}, {"nom": "Babacar DIARRA", "matricule": "1918", "fonction": "Maintenancier", "service": "SMTI", "dateDepart": "2027-08-01", "statut": "En attente", "comment": ""}, {"nom": "Elhadji Abdourahmane FAYE", "matricule": "121", "fonction": "Resp Biosécurité & Biosureté", "service": "QHSE", "dateDepart": "2026-12-01", "statut": "En attente", "comment": ""}, {"nom": "Mor SY", "matricule": "0724", "fonction": "Resp Prév des Risques & Envir & DD", "service": "QHSE", "dateDepart": "2027-04-01", "statut": "En attente", "comment": ""}, {"nom": "Maimouna FALL", "matricule": "840", "fonction": "Chargé Qualité", "service": "QHSE", "dateDepart": "2026-12-01", "statut": "En attente", "comment": ""}, {"nom": "Ndeye Coumba CISSE", "matricule": "0935", "fonction": "Technicienne Biosécurité & Biosureté", "service": "QHSE", "dateDepart": "2027-04-01", "statut": "En attente", "comment": ""}, {"nom": "Ramata DIALLO", "matricule": "674", "fonction": "Technicienne Qualité", "service": "QHSE", "dateDepart": "2026-11-01", "statut": "En attente", "comment": ""}, {"nom": "Valessa NGANDJIO TCHOUYA", "matricule": "976", "fonction": "Chargée Environnement & Developpement Durable", "service": "QHSE", "dateDepart": "2026-08-01", "statut": "En attente", "comment": ""}, {"nom": "Michel FAYE", "matricule": "0065", "fonction": "Responable Qualité", "service": "SM", "dateDepart": "2026-09-01", "statut": "En attente", "comment": ""}, {"nom": "Simon Pierre ASSONG", "matricule": "0682", "fonction": "Responsable Technique", "service": "SM", "dateDepart": "2026-12-01", "statut": "En attente", "comment": ""}, {"nom": "Jean François BASSENE", "matricule": "0527P", "fonction": "Technicien Supérieur", "service": "SM", "dateDepart": "2026-08-01", "statut": "En attente", "comment": ""}];
+const DEFAULT_CONGES = [{"nom": "Ousmane DIALLO", "service": "SMTI", "type": "Congé annuel", "debut": "2026-12-29", "fin": "2027-01-27", "statut": "En attente", "comment": ""}, {"nom": "Ibrahima SARR", "service": "SMTI", "type": "Congé annuel", "debut": "2026-04-24", "fin": "2026-05-23", "statut": "En attente", "comment": ""}, {"nom": "Aissatou NDIAYE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-07-10", "fin": "2026-08-08", "statut": "En attente", "comment": ""}, {"nom": "Zakaria BARRY", "service": "SMTI", "type": "Congé annuel", "debut": "2026-12-01", "fin": "2026-12-30", "statut": "En attente", "comment": ""}, {"nom": "Abdou Magib FALL", "service": "SMTI", "type": "Congé annuel", "debut": "2026-08-01", "fin": "2026-08-30", "statut": "En attente", "comment": ""}, {"nom": "Mamadou SYLLA", "service": "SMTI", "type": "Congé annuel", "debut": "2026-05-20", "fin": "2026-06-18", "statut": "En attente", "comment": ""}, {"nom": "Djiby FAYE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-11-15", "fin": "2026-12-14", "statut": "En attente", "comment": ""}, {"nom": "Pape Ngolan DIAO", "service": "SMTI", "type": "Congé annuel", "debut": "2027-07-14", "fin": "2027-08-12", "statut": "En attente", "comment": ""}, {"nom": "Pape Diarga CISSE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-11-10", "fin": "2026-12-09", "statut": "En attente", "comment": ""}, {"nom": "Mouhamadou DIALLO", "service": "SMTI", "type": "Congé annuel", "debut": "2026-08-15", "fin": "2026-09-13", "statut": "En attente", "comment": ""}, {"nom": "Lamine NDIAYE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-12-07", "fin": "2027-01-05", "statut": "En attente", "comment": ""}, {"nom": "Mamadou NDOUR", "service": "SMTI", "type": "Congé annuel", "debut": "2027-03-08", "fin": "2027-04-06", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Youssou NDIAYE", "service": "SMTI", "type": "Congé annuel", "debut": "2027-02-10", "fin": "2027-03-11", "statut": "En attente", "comment": ""}, {"nom": "Mouhamadou FALL", "service": "SMTI", "type": "Congé annuel", "debut": "2027-01-01", "fin": "2027-01-30", "statut": "En attente", "comment": ""}, {"nom": "Manel NYAFOUNA", "service": "SMTI", "type": "Congé annuel", "debut": "2026-05-07", "fin": "2026-06-05", "statut": "En attente", "comment": ""}, {"nom": "Abdoulaye DIENG", "service": "SMTI", "type": "Congé annuel", "debut": "2027-06-10", "fin": "2027-07-09", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Gora FAYE", "service": "SMTI", "type": "Congé annuel", "debut": "2027-07-10", "fin": "2027-08-08", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Abdou FAYE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-06-15", "fin": "2026-07-14", "statut": "En attente", "comment": ""}, {"nom": "Abdoulaye FAYE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-05-18", "fin": "2026-06-16", "statut": "En attente", "comment": ""}, {"nom": "Abdoulaye SOW", "service": "SMTI", "type": "Congé annuel", "debut": "2026-12-15", "fin": "2027-01-13", "statut": "En attente", "comment": ""}, {"nom": "Demba GUEYE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-05-15", "fin": "2026-06-13", "statut": "En attente", "comment": ""}, {"nom": "Omar DIALLO", "service": "SMTI", "type": "Congé annuel", "debut": "2026-12-26", "fin": "2027-01-24", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Mame Mor DIOUF", "service": "SMTI", "type": "Congé annuel", "debut": "2026-06-25", "fin": "2026-07-24", "statut": "En attente", "comment": ""}, {"nom": "Bidiel FALL", "service": "SMTI", "type": "Congé annuel", "debut": "2026-04-06", "fin": "2026-05-05", "statut": "En attente", "comment": ""}, {"nom": "Mamadou BEYE", "service": "SMTI", "type": "Congé annuel", "debut": "2027-09-17", "fin": "2027-10-16", "statut": "En attente", "comment": "Mat. non dispo /A intégrer IPD ce mois"}, {"nom": "Abdoulaye  KANE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-11-20", "fin": "2026-12-19", "statut": "En attente", "comment": ""}, {"nom": "Jacques DIALLO", "service": "SMTI", "type": "Congé annuel", "debut": "2026-12-15", "fin": "2027-01-13", "statut": "En attente", "comment": ""}, {"nom": "Amadou Bassel NDIAYE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-11-15", "fin": "2026-12-14", "statut": "En attente", "comment": ""}, {"nom": "Ibrahima BALDE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-09-15", "fin": "2026-10-14", "statut": "En attente", "comment": ""}, {"nom": "Mor DIOUF", "service": "SMTI", "type": "Congé annuel", "debut": "2026-08-15", "fin": "2026-09-13", "statut": "En attente", "comment": ""}, {"nom": "Abdou DIOP", "service": "SMTI", "type": "Congé annuel", "debut": "2026-12-20", "fin": "2027-01-18", "statut": "En attente", "comment": ""}, {"nom": "Ibrahima DIOP", "service": "SMTI", "type": "Congé annuel", "debut": "2026-08-10", "fin": "2026-09-08", "statut": "En attente", "comment": ""}, {"nom": "Alhamdou KANTE", "service": "SMTI", "type": "Congé annuel", "debut": "2026-09-10", "fin": "2026-10-09", "statut": "En attente", "comment": ""}, {"nom": "Kabou THIAM", "service": "SMTI", "type": "Congé annuel", "debut": "2026-12-01", "fin": "2026-12-30", "statut": "En attente", "comment": ""}, {"nom": "Boubacar BAH", "service": "SMTI", "type": "Congé annuel", "debut": "2026-09-17", "fin": "2026-10-16", "statut": "En attente", "comment": ""}, {"nom": "Babacar DIARRA", "service": "SMTI", "type": "Congé annuel", "debut": "2027-08-01", "fin": "2027-08-30", "statut": "En attente", "comment": ""}, {"nom": "Elhadji Abdourahmane FAYE", "service": "QHSE", "type": "Congé annuel", "debut": "2026-12-01", "fin": "2026-12-30", "statut": "En attente", "comment": ""}, {"nom": "Mor SY", "service": "QHSE", "type": "Congé annuel", "debut": "2027-04-01", "fin": "2027-04-30", "statut": "En attente", "comment": ""}, {"nom": "Maimouna FALL", "service": "QHSE", "type": "Congé annuel", "debut": "2026-12-01", "fin": "2026-12-30", "statut": "En attente", "comment": ""}, {"nom": "Ndeye Coumba CISSE", "service": "QHSE", "type": "Congé annuel", "debut": "2027-04-01", "fin": "2027-04-30", "statut": "En attente", "comment": ""}, {"nom": "Ramata DIALLO", "service": "QHSE", "type": "Congé annuel", "debut": "2026-11-01", "fin": "2026-11-30", "statut": "En attente", "comment": ""}, {"nom": "Valessa NGANDJIO TCHOUYA", "service": "QHSE", "type": "Congé annuel", "debut": "2026-08-01", "fin": "2026-08-30", "statut": "En attente", "comment": ""}, {"nom": "Michel FAYE", "service": "SM", "type": "Congé annuel", "debut": "2026-09-01", "fin": "2026-09-30", "statut": "En attente", "comment": ""}, {"nom": "Simon Pierre ASSONG", "service": "SM", "type": "Congé annuel", "debut": "2026-12-01", "fin": "2026-12-30", "statut": "En attente", "comment": ""}, {"nom": "Jean François BASSENE", "service": "SM", "type": "Congé annuel", "debut": "2026-08-01", "fin": "2026-08-30", "statut": "En attente", "comment": ""}];
+
+const DEFAULT_ACTIONS = [
+  {dir:'DRO',action:'Maintenir les reconnaissances qualité existantes (5 entités)',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'',comment:'',avance:0},
+  {dir:'DRO',action:'Assurer la formation continue du personnel sur la prévention du risque',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'',comment:'',avance:0},
+  {dir:'DRO',action:'Recruter un Responsable Sécurité',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'',comment:'',avance:0},
+  {dir:'DRO',action:'Diagnostiquer et assurer la maintenance des infrastructures',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'',comment:'',avance:0},
+  {dir:'QHSE',action:'Mise en oeuvre du Comité Qualité — Planning d\'activités',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'QHSE',action:'Obtenir de nouvelles reconnaissances qualité (Bio banque; IMI)',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'QHSE',action:'Mise en oeuvre SMI QHSE à l\'IPD — Certification ISO',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2026-06-01',comment:'',avance:0},
+  {dir:'QHSE',action:'Certification IFBA des Référents Biosécurité & Biosureté en BRM',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-11-01',comment:'',avance:0},
+  {dir:'QHSE',action:'Validation du Manuel de Biosécurité et des documents BBS',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-05-01',comment:'',avance:0},
+  {dir:'QHSE',action:'Certification Technique du Camion Mobile BSL3 Euwam Lab',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'CHS',action:'Actualiser le plan de circulation au campus IPD & marquages au sol',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-10-01',comment:'',avance:0},
+  {dir:'CHS',action:'Installer une sirène générale — Rénovation conciergerie',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-11-01',comment:'',avance:0},
+  {dir:'CHS',action:'Revoir le système d\'accès et de sécurité du site Campus',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-11-01',comment:'',avance:0},
+  {dir:'CHS',action:'Réaliser des visites CHS sur le terrain et inspections HSE',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-06-01',comment:'',avance:0},
+  {dir:'CHS',action:'Redynamiser l\'initiative de recyclage et revalorisation des déchets',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-11-01',comment:'',avance:0},
+  {dir:'CHS',action:'SMTI — Rénovation labo PIMI',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-04-01',comment:'',avance:0},
+  {dir:'CHS',action:'SMTI — Livraison projet insectarium Mbao',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2026-03-01',comment:'',avance:0},
+  {dir:'CHS',action:'SMTI — Livraison labo polio Mbao',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2026-04-01',comment:'',avance:0},
+  {dir:'CHS',action:'SMTI — Plan d\'aménagement campus Mbao',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'SM',action:'Participation aux essai-inter laboratoires — Talonnage des thermomètres',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'SM',action:'Recrutement de 2 techniciens supérieurs en métrologie',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'SM',action:'Formation métrologie dimensionnelle — pieds à coulisse et règles',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'SM',action:'Accréditation du SM en thermométrie sur site',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2026-12-01',comment:'',avance:0},
+  {dir:'MFD',action:'Accréditation initiale Métrologie/ISO 17025 et CNRS-PV/ISO 15189',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2024-12-01',comment:'',avance:0},
+  {dir:'MFD',action:'Certification initiale Pôle Microbiologie/ISO 9001 et ERCSD/ISO 9001',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2024-12-01',comment:'',avance:0},
+  {dir:'MFD',action:'Piloter mise en oeuvre outil Ennov — gestion qualité avec DDSI',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2024-12-01',comment:'',avance:0},
+  {dir:'EAF',action:'Finaliser documentation BSBS (POS, MO, ENR, Manuels)',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'EAF',action:'Organiser une formation IFBA certifiante en BRM pour les référents BSBS',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'EAF',action:'Certification 5* African CDC pour le Laboratoire camion Mobile P3',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'MS',action:'Mettre en oeuvre le plan de prévention / Document Unique / Cartographie des risques',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'2025-11-01',comment:'',avance:0},
+  {dir:'MS',action:'Mettre en place du système de management Santé Sécurité ISO 45001:2018',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2025-12-01',comment:'',avance:0},
+  {dir:'MF',action:'Accompagner les Directions dans leur démarche qualité (DDSI, DFC, DAL, DCH)',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'',comment:'',avance:0},
+  {dir:'MF',action:'Copiloter la mise en oeuvre des projets de digitalisation (EQMS ENNOV)',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'',date:'',comment:'',avance:0},
+  {dir:'NCC',action:'Participer à la rédaction des plans d\'audit BSBS et aux audits annuels',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'TS BSBS/ RBSBS',date:'2025-02-01',comment:'',avance:0},
+  {dir:'NCC',action:'Mise en oeuvre pratique et opérationnelle du processus Biosécurité',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'TS BSBS',date:'2025-03-01',comment:'',avance:0},
+  {dir:'NCC',action:'Établir une veille règlementaire Biosécurité & Biosureté',statut:'Non démarré',prio:'Moyenne',crit:'Normale',resp:'TS BS /RBSBS/QHSE',date:'2025-10-01',comment:'',avance:0},
+  {dir:'IPD',action:'Renforcer la recherche — réduction impact des 5 maladies infectieuses prioritaires en Afrique',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'',comment:'',avance:0},
+  {dir:'IPD',action:'Créer un Hub régional d\'expertise et de formation pour la préparation aux épidémies',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'',comment:'',avance:0},
+  {dir:'IPD',action:'Excellence opérationnelle — Transformation digitale et organisation Data Driven',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'',comment:'',avance:0},
+  {dir:'VN',action:'Elaborer et mettre en oeuvre le programme de gestion environnementale, DD et RSE',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2025-12-01',comment:'Mise en oeuvre du système',avance:0},
+  {dir:'VN',action:'Audit diagnostic Environnement, Social & DD et RSE',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2026-01-01',comment:'Définir les TDRs',avance:0},
+  {dir:'VN',action:'Plan d\'actions de mise à niveau du système environnemental',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2026-02-01',comment:'RAS',avance:0},
+  {dir:'VN',action:'Mise en oeuvre de la veille technique et réglementaire environnement et DD',statut:'Non démarré',prio:'Haute',crit:'Importante',resp:'',date:'2026-04-01',comment:'',avance:0},
+];
+
+// ═══════════════ STORAGE ═══════════════
+const LS = {
+  KEY_ACTIONS: 'dro_actions_v2',
+  KEY_CONGES: 'dro_conges_v2',
+  KEY_PERSONNEL: 'dro_personnel_v2',
+  load(key, def) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : JSON.parse(JSON.stringify(def)); }
+    catch(e) { return JSON.parse(JSON.stringify(def)); }
+  },
+  save(key, data) {
+    try { localStorage.setItem(key, JSON.stringify(data)); return true; }
+    catch(e) { toast('Erreur de sauvegarde locale!','err'); return false; }
+  }
+};
+
+// ═══════════════ STATE ═══════════════
+let actions = LS.load(LS.KEY_ACTIONS, DEFAULT_ACTIONS);
+let conges = LS.load(LS.KEY_CONGES, DEFAULT_CONGES);
+let personnel = LS.load(LS.KEY_PERSONNEL, DEFAULT_PERSONNEL);
+let sortField = '', sortDir = 1;
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let charts = {};
+
+// ═══════════════ SAVE ═══════════════
+function save() {
+  LS.save(LS.KEY_ACTIONS, actions);
+  LS.save(LS.KEY_CONGES, conges);
+  LS.save(LS.KEY_PERSONNEL, personnel);
+  const b = document.getElementById('save-badge');
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 1800);
+}
+
+// ═══════════════ NAV ═══════════════
+const TABS = {
+  'dashboard': renderDashboard,
+  'actions': renderActions,
+  'conges': renderCongeTab,
+  'personnel': renderPersonnel
+};
+function nav(tab, el) {
+  document.querySelectorAll('.tab-pane').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if (el) el.classList.add('active');
+  if (TABS[tab]) TABS[tab]();
+}
+
+// ═══════════════ CHART HELPERS ═══════════════
+function makeChart(id, type, labels, datasets, opts={}) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (charts[id]) charts[id].destroy();
+  const defaults = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {},
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        titleFont: { family: 'Inter', size: 12, weight: '700' },
+        bodyFont: { family: 'DM Sans', size: 12 },
+        padding: { x: 14, y: 10 },
+        cornerRadius: 10,
+        displayColors: true,
+        boxWidth: 10, boxHeight: 10,
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+      }
+    },
+    animation: { duration: 700, easing: 'easeOutQuart' }
+  };
+  charts[id] = new Chart(el, { type, data: { labels, datasets }, options: Object.assign(defaults, opts) });
+  return charts[id];
+}
+function legendHtml(labels, colors, values) {
+  const total = values.reduce((a,b)=>a+b,0)||1;
+  return labels.map((l,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px">
+    <div style="width:10px;height:10px;border-radius:3px;background:${colors[i]};flex-shrink:0;box-shadow:0 2px 4px ${colors[i]}44"></div>
+    <span style="flex:1;color:var(--muted)">${l}</span>
+    <span style="font-weight:800;color:var(--text);font-family:'Inter',sans-serif">${values[i]}</span>
+    <span style="font-size:10px;color:#94A3B8;min-width:32px;text-align:right">${Math.round(values[i]/total*100)}%</span>
+  </div>`).join('');
+}
+
+// ═══════════════ DASHBOARD ═══════════════
+function renderDashboard() {
+  document.getElementById('dash-date').textContent = 'Mis à jour le ' + new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  const n = actions.length;
+  const haute = actions.filter(a=>a.prio==='Haute').length;
+  const crit = actions.filter(a=>a.crit==='Importante').length;
+  const started = actions.filter(a=>a.statut!=='Non démarré').length;
+  const avgAv = n ? Math.round(actions.reduce((s,a)=>s+(+a.avance||0),0)/n) : 0;
+  const dirs = new Set(actions.map(a=>a.dir)).size;
+
+  document.getElementById('k-total').textContent = n;
+  document.getElementById('k-total-f').textContent = dirs + ' directions concernées';
+  document.getElementById('k-haute').textContent = haute;
+  document.getElementById('k-haute-f').textContent = Math.round(haute/n*100) + '% du total';
+  document.getElementById('k-crit').textContent = crit;
+  document.getElementById('k-av').textContent = avgAv + '%';
+  document.getElementById('k-av-f').textContent = started + ' action' + (started!==1?'s':'') + ' démarrée' + (started!==1?'s':'');
+
+  // Bar chart — actions by dir
+  const byCounts = {};
+  actions.forEach(a=>{ byCounts[a.dir]=(byCounts[a.dir]||0)+1; });
+  const sorted = Object.entries(byCounts).sort((a,b)=>b[1]-a[1]);
+  const dirLabels = sorted.map(([d])=>d);
+  const dirVals = sorted.map(([,v])=>v);
+  const dirColors = ['#0284C7','#7C3AED','#0F766E','#C2410C','#15803D','#B45309','#9F1239','#1D4ED8','#047857','#6D28D9','#B91C1C','#0369A1'];
+  makeChart('chart-dir','bar',dirLabels,[{
+    data:dirVals,
+    backgroundColor:dirColors.slice(0,dirLabels.length),
+    borderRadius:8, borderSkipped:false,
+    borderWidth:0,
+    hoverBackgroundColor:dirColors.slice(0,dirLabels.length).map(c=>c),
+  }],{
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.y+' actions'}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11},color:'#64748B'},border:{display:false}},
+      y:{grid:{color:'#F1F5F9',drawBorder:false},ticks:{stepSize:5,font:{family:'DM Sans',size:11},color:'#64748B'},border:{display:false}}
+    }
+  });
+
+  // Status donut
+  const nd = actions.filter(a=>a.statut==='Non démarré').length;
+  const ec = actions.filter(a=>a.statut==='En cours').length;
+  const done = actions.filter(a=>a.statut==='Terminé').length;
+  const bl = actions.filter(a=>a.statut==='Bloqué').length;
+  const sLabels = ['Non démarré','En cours','Terminé','Bloqué'];
+  const sVals = [nd,ec,done,bl];
+  const sColors = ['#94A3B8','#3B82F6','#10B981','#F59E0B'];
+  makeChart('chart-status','doughnut',sLabels,[{data:sVals,backgroundColor:sColors,borderWidth:3,borderColor:'#fff',hoverOffset:8,borderRadius:4}],{
+    cutout:'72%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed} (${Math.round(c.parsed/n*100)}%)`}}}
+  });
+  document.getElementById('status-legend').innerHTML = legendHtml(sLabels,sColors,sVals);
+
+  // Prio donut
+  const pLabels = ['Haute','Moyenne'];
+  const pVals = [haute, n-haute];
+  const pColors = ['#DC2626','#3B82F6'];
+  makeChart('chart-prio','doughnut',pLabels,[{data:pVals,backgroundColor:pColors,borderWidth:3,borderColor:'#fff',hoverOffset:8,borderRadius:4}],{
+    cutout:'72%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed} (${Math.round(c.parsed/n*100)}%)`}}}
+  });
+  document.getElementById('prio-legend').innerHTML = legendHtml(pLabels,pColors,pVals);
+
+  // Summary table
+  const byDir = {};
+  actions.forEach(a=>{
+    if(!byDir[a.dir]) byDir[a.dir]={nb:0,avT:0,ec:0,done:0,haute:0,crit:0};
+    byDir[a.dir].nb++; byDir[a.dir].avT+=(+a.avance||0);
+    if(a.statut==='En cours') byDir[a.dir].ec++;
+    if(a.statut==='Terminé') byDir[a.dir].done++;
+    if(a.prio==='Haute') byDir[a.dir].haute++;
+    if(a.crit==='Importante') byDir[a.dir].crit++;
+  });
+  document.getElementById('sum-body').innerHTML = Object.entries(byDir).sort((a,b)=>b[1].nb-a[1].nb).map(([d,v])=>{
+    const avg=Math.round(v.avT/v.nb);
+    const fillColor = avg >= 75 ? '#059669' : avg >= 40 ? '#0284C7' : '#F59E0B';
+    return `<tr>
+      <td><span class="badge bg-blue" style="font-weight:800">${d}</span></td>
+      <td><span style="font-weight:900;font-size:15px;font-family:'Inter',sans-serif;color:var(--text)">${v.nb}</span></td>
+      <td style="min-width:120px">
+        <div class="prog-row">
+          <div class="prog-bar" style="height:7px">
+            <div class="prog-fill" style="width:${avg}%;background:linear-gradient(90deg,${fillColor},${fillColor}cc)"></div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:${fillColor};min-width:32px">${avg}%</span>
+        </div>
+      </td>
+      <td>${v.ec?'<span class="badge bg-blue">'+v.ec+'</span>':'<span style="color:#CBD5E1">—</span>'}</td>
+      <td>${v.done?'<span class="badge bg-green">'+v.done+'</span>':'<span style="color:#CBD5E1">—</span>'}</td>
+      <td>${v.haute?'<span class="badge bg-red">'+v.haute+'</span>':'<span style="color:#CBD5E1">—</span>'}</td>
+      <td>${v.crit?'<span class="badge bg-amber">'+v.crit+'</span>':'<span style="color:#CBD5E1">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════ ACTIONS ═══════════════
+function renderActions() {
+  const dirs = [...new Set(actions.map(a=>a.dir))].sort();
+  const fd = document.getElementById('f-dir');
+  const cur = fd.value;
+  fd.innerHTML = '<option value="">Toutes directions</option>' + dirs.map(d=>`<option${d===cur?' selected':''}>${d}</option>`).join('');
+  filterActions();
+}
+function filterActions() {
+  const fD = document.getElementById('f-dir').value;
+  const fS = document.getElementById('f-stat').value;
+  const fP = document.getElementById('f-prio').value;
+  const fC = document.getElementById('f-crit').value;
+  const fQ = document.getElementById('f-search').value.toLowerCase();
+  let data = actions.map((a,i)=>({...a,_i:i})).filter(a=>{
+    return (!fD||a.dir===fD)&&(!fS||a.statut===fS)&&(!fP||a.prio===fP)&&(!fC||a.crit===fC)
+      &&(!fQ||a.action.toLowerCase().includes(fQ)||a.dir.toLowerCase().includes(fQ)||(a.resp||'').toLowerCase().includes(fQ));
+  });
+  if(sortField) data.sort((a,b)=>{
+    const va=a[sortField]||'', vb=b[sortField]||'';
+    return (va<vb?-1:va>vb?1:0)*sortDir;
+  });
+  document.getElementById('a-count').textContent = data.length + ' action' + (data.length!==1?'s':'');
+  document.getElementById('a-count-sub').textContent = data.length + ' résultat' + (data.length!==1?'s':'');
+  const statBadge = s => {
+    const m={'Non démarré':'bg-gray','En cours':'bg-blue','Terminé':'bg-green','Bloqué':'bg-amber'};
+    return `<span class="badge ${m[s]||'bg-gray'}">${s}</span>`;
+  };
+  document.getElementById('actions-body').innerHTML = data.map(a=>{
+    const d = a.date ? new Date(a.date+'T00:00:00').toLocaleDateString('fr-FR') : '—';
+    const overdue = a.date && new Date(a.date)<new Date() && a.statut!=='Terminé';
+    return `<tr style="cursor:pointer" onclick="openModal('action',${a._i})">
+      <td><span class="badge bg-blue">${a.dir}</span></td>
+      <td class="td-trunc" title="${a.action.replace(/"/g,'&quot;')}">${a.action}</td>
+      <td style="color:var(--muted)">${a.resp||'—'}</td>
+      <td style="font-size:12px;color:${overdue?'var(--red)':'var(--muted)'}${overdue?';font-weight:600':''}">
+        ${d}${overdue?' <i class="ti ti-alert-circle" style="font-size:12px"></i>':''}</td>
+      <td>${a.prio==='Haute'?'<span class="badge bg-red">Haute</span>':'<span style="color:var(--muted);font-size:12px">Moyenne</span>'}</td>
+      <td>${a.crit==='Importante'?'<span class="badge bg-amber">Importante</span>':'<span style="color:#CBD5E1;font-size:12px">Normale</span>'}</td>
+      <td>${statBadge(a.statut)}</td>
+      <td><div class="prog-row"><div class="prog-bar"><div class="prog-fill" style="width:${a.avance}%;${a.statut==='Terminé'?'background:var(--green)':''}"></div></div><span style="font-size:12px;color:var(--muted)">${a.avance}%</span></div></td>
+      <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteAction(${a._i})" title="Supprimer l'action"><i class="ti ti-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+function sortBy(f) {
+  if(sortField===f) sortDir*=-1; else {sortField=f;sortDir=1;}
+  filterActions();
+}
+function resetFilters() {
+  ['f-dir','f-stat','f-prio','f-crit'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-search').value='';
+  filterActions();
+}
+function deleteAction(i) {
+  if(confirm('Supprimer cette action ?')) { actions.splice(i,1); save(); toast('Action supprimée'); filterActions(); renderDashboard(); }
+}
+
+// ═══════════════ CONGÉS ═══════════════
+const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+let cgSortField = 'debut', cgSortDir = 1;
+let cgView = 'gantt';
+
+function renderCongeTab() {
+  buildMonthTabs();
+  renderCongKPIs();
+  renderCalendar();
+  renderCongeTimeline();
+  renderCongesTable();
+  renderCongesCharts();
+  renderGanttHeatmap();
+}
+
+function renderCongKPIs() {
+  const now = new Date();
+  const in30 = new Date(now); in30.setDate(in30.getDate()+30);
+  const encours = conges.filter(c => {
+    const s=new Date(c.debut+'T00:00:00'), e=new Date(c.fin+'T00:00:00');
+    return s<=now && e>=now;
+  });
+  const avenir = conges.filter(c => {
+    const s=new Date(c.debut+'T00:00:00');
+    return s>now && s<=in30;
+  });
+  const attente = conges.filter(c=>c.statut==='En attente');
+  const approuves = conges.filter(c=>c.statut==='Approuvé');
+  const taux = conges.length ? Math.round(approuves.length/conges.length*100) : 0;
+  document.getElementById('ck-encours').textContent = encours.length;
+  document.getElementById('ck-encours-s').textContent = encours.length===1?'agent absent':'agents absents aujourd\'hui';
+  document.getElementById('ck-avenir').textContent = avenir.length;
+  document.getElementById('ck-avenir-s').textContent = avenir.length===1?'congé planifié':'congés planifiés';
+  document.getElementById('ck-attente').textContent = attente.length;
+  document.getElementById('ck-appro').textContent = taux+'%';
+  document.getElementById('ck-appro-s').textContent = `${approuves.length} approuvés / ${conges.length} total`;
+}
+
+function buildMonthTabs() {
+  // kept for compatibility — no-op since we use prev/next nav
+}
+
+function prevMonth() {
+  currentMonth--;
+  if(currentMonth<0){currentMonth=11;currentYear--;}
+  renderCalendar();
+}
+function nextMonth() {
+  currentMonth++;
+  if(currentMonth>11){currentMonth=0;currentYear++;}
+  renderCalendar();
+}
+
+function setMonth(m,y){ currentMonth=m; currentYear=y; renderCalendar(); }
+
+function renderCalendar() {
+  const label = MONTHS[currentMonth]+' '+currentYear;
+  const el1 = document.getElementById('cal-label');
+  const el2 = document.getElementById('cal-label-nav');
+  if(el1) el1.textContent = label;
+  if(el2) el2.textContent = label;
+
+  const jours=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  document.getElementById('cal-h').innerHTML = jours.map(j=>`<div class="cal-head-cell">${j}</div>`).join('');
+  const today = new Date();
+  const first = new Date(currentYear,currentMonth,1);
+  let startDay = first.getDay()-1; if(startDay<0) startDay=6;
+  const dim = new Date(currentYear,currentMonth+1,0).getDate();
+  const dimPrev = new Date(currentYear,currentMonth,0).getDate();
+
+  function getCongeDays(dt) {
+    return conges.filter(c=>{
+      const s=new Date(c.debut+'T00:00:00'),e=new Date(c.fin+'T00:00:00');
+      return dt>=s&&dt<=e;
+    });
+  }
+  let cells=[];
+  for(let i=startDay-1;i>=0;i--) cells.push({d:dimPrev-i,other:true});
+  for(let d=1;d<=dim;d++){
+    const dt=new Date(currentYear,currentMonth,d);
+    const cgs=getCongeDays(dt);
+    const isToday = dt.toDateString()===today.toDateString();
+    cells.push({d,other:false,today:isToday,cgs});
+  }
+  while(cells.length%7!==0) cells.push({d:cells.length-dim-startDay+1,other:true});
+
+  document.getElementById('cal-b').innerHTML = cells.map(c=>{
+    if(c.other) return `<div class="cal-day other"><span class="cal-num">${c.d}</span></div>`;
+    const cgs = c.cgs||[];
+    const hasApprouve = cgs.some(x=>x.statut==='Approuvé');
+    const hasAttente = cgs.some(x=>x.statut==='En attente');
+    let cls = '';
+    if(cgs.length>0){
+      if(hasApprouve&&!hasAttente) cls=' has-conge has-approuve';
+      else if(!hasApprouve&&hasAttente) cls=' has-conge has-attente';
+      else if(cgs.length>0) cls=' has-conge has-mixed';
+    }
+    const names = cgs.length>0 ? cgs.map(cg=>cg.nom.split(' ')[0]).join(', ') : '';
+    const countBadge = cgs.length>1 ? `<span class="cal-day-count">${cgs.length}</span>` : '';
+    return `<div class="cal-day${c.today?' today':''}${cls}" title="${names}">
+      <span class="cal-num">${c.d}</span>
+      ${cgs.length>0?`<div class="cal-conge-dot"></div>${countBadge}`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderCongeTimeline() {
+  const now = new Date();
+  const fSvc = document.getElementById('cg-filt-svc').value;
+  const fStat = (document.getElementById('cg-filt-stat-tl')||{}).value||'';
+  let upcoming = conges.filter(c=>new Date(c.fin+'T00:00:00')>=now
+    &&(!fSvc||c.service===fSvc)&&(!fStat||c.statut===fStat))
+    .sort((a,b)=>new Date(a.debut)-new Date(b.debut)).slice(0,15);
+  const dotC = s=>s==='Approuvé'?'#10B981':s==='Refusé'?'#DC2626':'#F59E0B';
+  const statBadge = s=>{const m={'Approuvé':'bg-green','Refusé':'bg-red','En attente':'bg-amber'};return `<span class="badge ${m[s]||'bg-gray'}" style="font-size:10px;padding:2px 7px">${s}</span>`;};
+  document.getElementById('conge-tl').innerHTML = upcoming.length ? upcoming.map(c=>{
+    const s=new Date(c.debut+'T00:00:00'),e=new Date(c.fin+'T00:00:00');
+    const diff=Math.round((e-s)/86400000)+1;
+    const enCours = s<=now&&e>=now;
+    return `<div class="next-card${enCours?' next-card-active':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div>
+          <div class="next-card-name">${c.nom}${enCours?' <span style="font-size:10px;color:#10B981;font-weight:600">● En cours</span>':''}</div>
+          <div class="next-card-dates"><span class="badge bg-blue" style="font-size:10px;padding:1px 7px;margin-right:4px">${c.service}</span>${new Date(c.debut+'T00:00:00').toLocaleDateString('fr-FR')} → ${new Date(c.fin+'T00:00:00').toLocaleDateString('fr-FR')}</div>
+          <div class="next-card-dur">${diff} jour${diff>1?'s':''} · ${c.type||'Congé annuel'}</div>
+        </div>
+        <div>${statBadge(c.statut)}</div>
+      </div>
+    </div>`;
+  }).join('') : '<p style="color:var(--muted);font-size:13px;padding:8px 0">Aucun congé à venir.</p>';
+}
+
+// ── GANTT + HEATMAP ──
+function switchView(v) {
+  cgView = v;
+  document.getElementById('gantt-view').style.display = v==='gantt'?'':'none';
+  document.getElementById('heat-view').style.display = v==='heat'?'':'none';
+  document.getElementById('vt-gantt').classList.toggle('active', v==='gantt');
+  document.getElementById('vt-heat').classList.toggle('active', v==='heat');
+  renderGanttHeatmap();
+}
+
+function renderGanttHeatmap() {
+  if(cgView==='gantt') renderGantt();
+  else renderHeatmap();
+}
+
+function renderGantt() {
+  const year = parseInt(document.getElementById('gantt-filt-year').value)||2026;
+  const fSvc = document.getElementById('gantt-filt-svc').value;
+  const data = conges.filter(c=>(!fSvc||c.service===fSvc)).filter(c=>{
+    const s=new Date(c.debut+'T00:00:00'), e=new Date(c.fin+'T00:00:00');
+    const yStart=new Date(year,0,1), yEnd=new Date(year,11,31);
+    return s<=yEnd && e>=yStart;
+  }).sort((a,b)=>new Date(a.debut)-new Date(b.debut));
+
+  const yearStart = new Date(year,0,1).getTime();
+  const yearEnd = new Date(year,11,31,23,59,59).getTime();
+  const yearLen = yearEnd - yearStart;
+  const today = new Date();
+
+  // Month headers
+  const mhEl = document.getElementById('gantt-mheader');
+  mhEl.innerHTML = MONTHS.map(m=>`<div class="gantt-mh">${m.slice(0,3)}</div>`).join('');
+
+  // Gantt rows
+  const barCls = s=>s==='Approuvé'?'s-approuve':s==='Refusé'?'s-refuse':'s-attente';
+  const todayPct = Math.min(100,Math.max(0,((today.getTime()-yearStart)/yearLen*100)));
+
+  document.getElementById('gantt-body').innerHTML = data.map(c=>{
+    const s=Math.max(new Date(c.debut+'T00:00:00').getTime(),yearStart);
+    const e=Math.min(new Date(c.fin+'T00:00:00').getTime(),yearEnd);
+    const left = ((s-yearStart)/yearLen*100).toFixed(2);
+    const width = Math.max(0.5,((e-s)/yearLen*100)).toFixed(2);
+    return `<div class="gantt-row" title="${c.nom} | ${c.debut} → ${c.fin} | ${c.statut}">
+      <div class="gantt-label">${c.nom.split(' ').pop()}<span class="gantt-svc">${c.service}</span></div>
+      <div class="gantt-track">
+        <div class="gantt-today-line" style="left:${todayPct}%"></div>
+        <div class="gantt-bar ${barCls(c.statut)}" style="left:${left}%;width:${width}%">
+          ${parseFloat(width)>5?c.nom.split(' ').pop():''}
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="padding:20px;color:var(--muted);font-size:13px">Aucune donnée pour cette sélection.</div>';
+}
+
+function renderHeatmap() {
+  const year = parseInt(document.getElementById('gantt-filt-year').value)||2026;
+  const fSvc = document.getElementById('gantt-filt-svc').value;
+  const svcs = fSvc ? [fSvc] : ['SMTI','QHSE','SM','DRO'];
+
+  // Build heatmap: rows = services, cols = months
+  const heatData = {};
+  svcs.forEach(s=>{ heatData[s]=Array(12).fill(0); });
+
+  conges.filter(c=>(!fSvc||c.service===fSvc)).forEach(c=>{
+    if(!heatData[c.service]) return;
+    const s=new Date(c.debut+'T00:00:00'), e=new Date(c.fin+'T00:00:00');
+    for(let m=0;m<12;m++){
+      const mStart=new Date(year,m,1), mEnd=new Date(year,m+1,0);
+      if(s<=mEnd&&e>=mStart) heatData[c.service][m]++;
+    }
+  });
+
+  const heatColor = v=>{
+    if(v===0) return '#F0FDF4';
+    if(v<=2) return '#6EE7B7';
+    if(v<=5) return '#10B981';
+    if(v<=9) return '#059669';
+    return '#047857';
+  };
+  const textColor = v=> v>=3?'#fff':'#065F46';
+
+  // Header row
+  let html = `<div class="hm-label">Service</div>`;
+  MONTHS.forEach(m=>{ html+=`<div class="hm-header">${m.slice(0,3)}</div>`; });
+
+  svcs.forEach(s=>{
+    html += `<div class="hm-label">${s}</div>`;
+    heatData[s].forEach((v,m)=>{
+      const mName = MONTHS[m];
+      html+=`<div class="hm-cell" style="background:${heatColor(v)};color:${textColor(v)}" title="${v} congé${v!==1?'s':''} en ${mName} (${s})">${v||''}</div>`;
+    });
+  });
+
+  document.getElementById('heatmap-body').innerHTML = html;
+}
+
+function renderCongesTable() {
+  const fS = document.getElementById('f-cg-svc').value;
+  const fSt = document.getElementById('f-cg-stat').value;
+  const fTy = (document.getElementById('f-cg-type')||{}).value||'';
+  const fQ = document.getElementById('f-cg-search').value.toLowerCase();
+  let data = conges.map((c,i)=>({...c,_i:i})).filter(c=>{
+    return (!fS||c.service===fS)&&(!fSt||c.statut===fSt)&&(!fTy||c.type===fTy)
+      &&(!fQ||c.nom.toLowerCase().includes(fQ)||(c.service||'').toLowerCase().includes(fQ));
+  });
+  // compute duration for sort
+  data = data.map(c=>{
+    const s=new Date(c.debut+'T00:00:00'),e=new Date(c.fin+'T00:00:00');
+    return {...c, dur: Math.round((e-s)/86400000)+1};
+  });
+  if(cgSortField) data.sort((a,b)=>{
+    const va=a[cgSortField]||'', vb=b[cgSortField]||'';
+    return (va<vb?-1:va>vb?1:0)*cgSortDir;
+  });
+  document.getElementById('cg-count').textContent = data.length + ' congé' + (data.length!==1?'s':'');
+  const statBadge = s=>{const m={'Approuvé':'bg-green','Refusé':'bg-red','En attente':'bg-amber'};return `<span class="badge ${m[s]||'bg-gray'}">${s}</span>`;};
+  const now = new Date();
+  document.getElementById('conges-body').innerHTML = data.map(c=>{
+    const s=new Date(c.debut+'T00:00:00'),e=new Date(c.fin+'T00:00:00');
+    const enCours = s<=now&&e>=now;
+    const typeIcon = c.type==='Congé maladie'?'ti-stethoscope':c.type==='Congé formation'?'ti-school':c.type==='Congé maternité/paternité'?'ti-baby-carriage':'ti-beach';
+    return `<tr style="cursor:pointer${enCours?';background:#F0FDF4':''}" onclick="openModal('conge',${c._i})">
+      <td><strong>${c.nom}</strong>${enCours?'<span style="font-size:10px;color:#10B981;margin-left:6px;font-weight:600">● En cours</span>':''}</td>
+      <td><span class="badge bg-blue">${c.service}</span></td>
+      <td><span style="font-size:12px;color:var(--muted)"><i class="ti ${typeIcon}" style="font-size:13px;vertical-align:-2px;margin-right:3px"></i>${c.type||'Congé annuel'}</span></td>
+      <td style="font-size:12px">${s.toLocaleDateString('fr-FR')}</td>
+      <td style="font-size:12px">${e.toLocaleDateString('fr-FR')}</td>
+      <td><span style="font-weight:700;color:var(--blue);font-size:13px">${c.dur}j</span></td>
+      <td>${statBadge(c.statut)}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          ${c.statut!=='Approuvé'?`<button class="btn btn-approve btn-sm" onclick="event.stopPropagation();approuverConge(${c._i})" title="Approuver"><i class="ti ti-check"></i></button>`:''}
+          ${c.statut!=='Refusé'?`<button class="btn btn-refuse btn-sm" onclick="event.stopPropagation();refuserConge(${c._i})" title="Refuser"><i class="ti ti-x"></i></button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteConge(${c._i})" title="Supprimer"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function sortCongesBy(f) {
+  if(cgSortField===f) cgSortDir*=-1; else{cgSortField=f;cgSortDir=1;}
+  renderCongesTable();
+}
+
+function approuverConge(i) {
+  conges[i].statut='Approuvé'; save(); toast('Congé approuvé'); renderCongeTab();
+}
+function refuserConge(i) {
+  conges[i].statut='Refusé'; save(); toast('Congé refusé','warn'); renderCongeTab();
+}
+function bulkApprove() {
+  const fSvc = document.getElementById('f-cg-svc').value;
+  let count=0;
+  conges.forEach((c,i)=>{
+    if(c.statut==='En attente'&&(!fSvc||c.service===fSvc)){conges[i].statut='Approuvé';count++;}
+  });
+  if(count>0){save();toast(count+' congé'+(count>1?'s':'')+' approuvé'+(count>1?'s':''));renderCongeTab();}
+  else toast('Aucun congé en attente','warn');
+}
+
+function renderCongesCharts() {
+  // By month
+  const mCounts = Array(12).fill(0);
+  conges.forEach(c=>{
+    const m=new Date(c.debut+'T00:00:00').getMonth();
+    mCounts[m]++;
+  });
+  makeChart('chart-cg-month','bar',MONTHS.map(m=>m.slice(0,3)),[{
+    data:mCounts,
+    backgroundColor:mCounts.map((_,i)=>i===currentMonth&&currentYear===new Date().getFullYear()?'#0369A1':'rgba(2,132,199,0.75)'),
+    borderRadius:6, borderSkipped:false,
+    hoverBackgroundColor:mCounts.map((_,i)=>i===currentMonth&&currentYear===new Date().getFullYear()?'#0284C7':'#0284C7'),
+  }],{
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y} congé${c.parsed.y!==1?'s':''}`}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:10},color:'#64748B'},border:{display:false}},
+      y:{grid:{color:'#F1F5F9'},ticks:{stepSize:2,font:{family:'DM Sans',size:10},color:'#64748B'},border:{display:false}}
+    }
+  });
+  // By service
+  const svcs = ['SMTI','QHSE','SM','DRO'];
+  const svcVals = svcs.map(s=>conges.filter(c=>c.service===s).length);
+  const svcColors=['#0284C7','#7C3AED','#059669','#D97706'];
+  makeChart('chart-cg-svc','doughnut',svcs,[{data:svcVals,backgroundColor:svcColors,borderWidth:3,borderColor:'#fff',hoverOffset:8,borderRadius:4}],{
+    cutout:'70%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed}`}}}
+  });
+  document.getElementById('cg-svc-legend').innerHTML = legendHtml(svcs,svcColors,svcVals);
+}
+
+function deleteConge(i) {
+  if(confirm('Supprimer ce congé ?')) { conges.splice(i,1); save(); toast('Congé supprimé'); renderCongeTab(); }
+}
+
+// ═══════════════ PERSONNEL ═══════════════
+const SVC_COLORS=[['#EFF6FF','#1D4ED8'],['#F5F3FF','#5B21B6'],['#F0FDF4','#166534'],['#FFFBEB','#92400E'],['#FEF2F2','#991B1B'],['#ECFEFF','#0E7490']];
+let pView = 'table', pSortField = 'nom', pSortDir = 1;
+
+function switchPView(v) {
+  pView = v;
+  document.getElementById('p-table-view').style.display = v==='table'?'':'none';
+  document.getElementById('p-cards-view').style.display = v==='cards'?'':'none';
+  document.getElementById('vt-p-table').classList.toggle('active', v==='table');
+  document.getElementById('vt-p-cards').classList.toggle('active', v==='cards');
+}
+
+function sortPersonnelBy(f) {
+  if(pSortField===f) pSortDir*=-1; else{pSortField=f;pSortDir=1;}
+  renderPersonnel();
+}
+
+function renderPersonnel() {
+  const fS = document.getElementById('f-p-svc').value;
+  const fF = (document.getElementById('f-p-fonc')||{}).value||'';
+  const fQ = document.getElementById('f-p-search').value.toLowerCase();
+
+  // Populate function filter
+  const foncEl = document.getElementById('f-p-fonc');
+  if(foncEl) {
+    const foncs = [...new Set(personnel.map(p=>p.fonction).filter(Boolean))].sort();
+    const cur = foncEl.value;
+    foncEl.innerHTML = '<option value="">Toutes fonctions</option>' + foncs.map(f=>`<option${f===cur?' selected':''}>${f}</option>`).join('');
+  }
+
+  let data = personnel.map((p,i)=>({...p,_i:i})).filter(p=>
+    (!fS||p.service===fS)&&(!fF||p.fonction===fF)
+    &&(!fQ||(p.nom||'').toLowerCase().includes(fQ)||(p.matricule||'').toLowerCase().includes(fQ)||(p.fonction||'').toLowerCase().includes(fQ))
+  );
+  if(pSortField) data.sort((a,b)=>{
+    const va=a[pSortField]||'', vb=b[pSortField]||'';
+    return (va<vb?-1:va>vb?1:0)*pSortDir;
+  });
+
+  // KPIs
+  const svcs=['SMTI','QHSE','SM','DRO'];
+  document.getElementById('pk-total').textContent = personnel.length;
+  document.getElementById('pk-total-f').textContent = svcs.filter(s=>personnel.some(p=>p.service===s)).length + ' services';
+  ['smti','qhse','sm'].forEach(s=>{
+    const cnt = personnel.filter(p=>p.service===s.toUpperCase()).length;
+    document.getElementById('pk-'+s).textContent = cnt;
+    document.getElementById('pk-'+s+'-f').textContent = cnt===1?'agent':'agents';
+  });
+
+  // Chart par fonction
+  const foncCounts = {};
+  personnel.forEach(p=>{ if(p.fonction) foncCounts[p.fonction]=(foncCounts[p.fonction]||0)+1; });
+  const sortedFoncs = Object.entries(foncCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  makeChart('chart-p-fonc','bar',
+    sortedFoncs.map(([f])=>f.length>22?f.slice(0,20)+'…':f),
+    [{data:sortedFoncs.map(([,v])=>v),backgroundColor:'rgba(124,58,237,0.8)',borderRadius:6,borderSkipped:false,hoverBackgroundColor:'#7C3AED'}],
+    {indexAxis:'y',plugins:{legend:{display:false}},scales:{
+      x:{grid:{color:'#F1F5F9'},ticks:{stepSize:1,font:{family:'DM Sans',size:10},color:'#64748B'},border:{display:false}},
+      y:{grid:{display:false},ticks:{font:{family:'DM Sans',size:10},color:'#64748B'},border:{display:false}}
+    }}
+  );
+
+  // Départs à venir
+  const now = new Date();
+  const in12m = new Date(now); in12m.setFullYear(in12m.getFullYear()+1);
+  const departs = personnel.filter(p=>p.dateDepart&&new Date(p.dateDepart+'T00:00:00')>=now&&new Date(p.dateDepart+'T00:00:00')<=in12m)
+    .sort((a,b)=>new Date(a.dateDepart)-new Date(b.dateDepart));
+  const dEl = document.getElementById('p-departs-list');
+  if(dEl) dEl.innerHTML = departs.length ? departs.map(p=>{
+    const d=new Date(p.dateDepart+'T00:00:00');
+    const diff=Math.round((d-now)/86400000);
+    const urgClass = diff<60?'var(--red)':diff<120?'var(--amber)':'var(--muted)';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #F8FAFC">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${p.nom}</div>
+        <div style="font-size:11px;color:var(--muted)">${p.fonction||'—'} · <span class="badge bg-blue" style="font-size:10px;padding:1px 6px">${p.service}</span></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-weight:700;color:${urgClass}">${d.toLocaleDateString('fr-FR')}</div>
+        <div style="font-size:11px;color:var(--muted)">${diff}j</div>
+      </div>
+    </div>`;
+  }).join('') : '<p style="color:var(--muted);font-size:13px;padding:8px 0">Aucun départ prévu dans les 12 mois.</p>';
+
+  // Count label
+  document.querySelectorAll('#p-count-sub').forEach(el=>{ el.textContent = data.length + ' agent' + (data.length!==1?'s':''); });
+
+  // TABLE VIEW
+  const now2 = new Date();
+  document.getElementById('p-tbody').innerHTML = data.map(p=>{
+    const ci = svcs.indexOf(p.service)%SVC_COLORS.length; const c = SVC_COLORS[Math.max(0,ci)];
+    const ini = ((p.nom||'?')[0]||'?').toUpperCase()+((p.nom||'?').split(' ')[1]?.[0]||'?').toUpperCase();
+    const hasConge = conges.some(cg=>cg.nom===p.nom && new Date(cg.fin+'T00:00:00')>=now2);
+    const dd = p.dateDepart ? new Date(p.dateDepart+'T00:00:00') : null;
+    const ddDiff = dd ? Math.round((dd-now2)/86400000) : null;
+    const ddColor = ddDiff!==null&&ddDiff<60?'var(--red)':ddDiff!==null&&ddDiff<120?'var(--amber)':'var(--muted)';
+    return `<tr style="cursor:pointer" onclick="openModal('personnel',${p._i})">
+      <td>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="p-avatar" style="width:32px;height:32px;font-size:11px;background:${c[0]};color:${c[1]}">${ini}</div>
+          <div>
+            <div style="font-weight:600;font-size:13px">${p.nom}</div>
+            ${p.comment?`<div style="font-size:11px;color:var(--amber)"><i class="ti ti-info-circle" style="font-size:11px"></i> ${p.comment}</div>`:''}
+          </div>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--muted)">${p.matricule&&p.matricule!='N/A'?p.matricule:'<span style="color:#CBD5E1">—</span>'}</td>
+      <td><span class="badge bg-blue">${p.service}</span></td>
+      <td style="font-size:12px;color:var(--muted);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.fonction||'—'}</td>
+      <td style="font-size:12px;color:${ddColor};font-weight:${ddDiff!==null&&ddDiff<120?'600':'400'}">${dd?dd.toLocaleDateString('fr-FR'):'<span style="color:#CBD5E1">—</span>'}</td>
+      <td>${hasConge?'<span class="badge bg-amber" style="font-size:10px">Congé prévu</span>':'<span style="color:#CBD5E1;font-size:12px">—</span>'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('personnel',${p._i})" title="Modifier"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletePersonnel(${p._i})" title="Supprimer"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // CARDS VIEW
+  document.getElementById('p-grid').innerHTML = data.map(p=>{
+    const ci = svcs.indexOf(p.service)%SVC_COLORS.length; const c = SVC_COLORS[Math.max(0,ci)];
+    const ini = ((p.nom||'?')[0]||'?').toUpperCase()+((p.nom||'?').split(' ')[1]?.[0]||'?').toUpperCase();
+    const hasConge = conges.some(cg=>cg.nom===p.nom && new Date(cg.fin+'T00:00:00')>=new Date());
+    return `<div class="p-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="p-avatar" style="background:${c[0]};color:${c[1]}">${ini}</div>
+          <div>
+            <div class="p-name">${p.nom}</div>
+            <div class="p-pos"><span class="badge bg-blue" style="font-size:10px;padding:2px 8px">${p.service}</span>${hasConge?' <span class="badge bg-amber" style="font-size:10px">Congé</span>':''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:3px">
+          <button class="btn btn-ghost btn-sm" onclick="openModal('personnel',${p._i})" title="Modifier"><i class="ti ti-edit" style="font-size:13px"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="deletePersonnel(${p._i})" title="Supprimer"><i class="ti ti-trash" style="font-size:13px"></i></button>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:10px">
+        ${p.matricule&&p.matricule!='N/A'?`<div class="p-detail"><i class="ti ti-id-badge"></i>Mat. ${p.matricule}</div>`:''}
+        <div class="p-detail"><i class="ti ti-briefcase"></i>${p.fonction||'—'}</div>
+        ${p.email?`<div class="p-detail"><i class="ti ti-mail"></i><a href="mailto:${p.email}" style="color:var(--blue);text-decoration:none">${p.email}</a></div>`:''}
+        ${p.dateDepart?`<div class="p-detail"><i class="ti ti-calendar"></i>Départ : ${new Date(p.dateDepart+'T00:00:00').toLocaleDateString('fr-FR')}</div>`:''}
+        ${p.comment?`<div class="p-detail" style="color:var(--amber)"><i class="ti ti-info-circle"></i>${p.comment}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deletePersonnel(i) {
+  if(confirm('Supprimer cet agent ?')) { personnel.splice(i,1); save(); toast('Agent supprimé'); renderPersonnel(); }
+}
+
+function exportPersonnelCSV() {
+  const cols=['Nom','Matricule','Service','Fonction','Email','Tel','Depart souhaite','Commentaire'];
+  const rows=personnel.map(p=>[p.nom,p.matricule||'',p.service,p.fonction||'',p.email||'',p.tel||'',p.dateDepart||'',p.comment||'']);
+  const csv=[cols.join(';'),...rows.map(r=>r.join(';'))].join('\n');
+  dl('\uFEFF'+csv,'DRO_Personnel_'+isoDate()+'.csv','text/csv;charset=utf-8;');
+  toast('Export CSV prêt');
+}
+
+// ═══════════════ MODALS ═══════════════
+function openModal(type, idx) {
+  const overlay = document.getElementById('m-'+type);
+  overlay.classList.add('open');
+  if (type === 'action') {
+    document.getElementById('a-idx').value = idx===''?'':idx;
+    if (idx === '') {
+      document.getElementById('ma-title').textContent = 'Nouvelle action';
+      ['a-dir','a-resp','a-prio','a-crit','a-stat'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('a-dir').value='DRO';
+      document.getElementById('a-prio').value='Moyenne';
+      document.getElementById('a-crit').value='Normale';
+      document.getElementById('a-stat').value='Non démarré';
+      document.getElementById('a-desc').value='';
+      document.getElementById('a-date').value='';
+      document.getElementById('a-av').value=0;
+      document.getElementById('a-com').value='';
+    } else {
+      const a = actions[idx];
+      document.getElementById('ma-title').textContent = 'Modifier l\'action';
+      document.getElementById('a-dir').value=a.dir;
+      document.getElementById('a-desc').value=a.action;
+      document.getElementById('a-resp').value=a.resp||'';
+      document.getElementById('a-date').value=a.date||'';
+      document.getElementById('a-prio').value=a.prio;
+      document.getElementById('a-crit').value=a.crit;
+      document.getElementById('a-stat').value=a.statut;
+      document.getElementById('a-av').value=a.avance||0;
+      document.getElementById('a-com').value=a.comment||'';
+    }
+  } else if (type === 'conge') {
+    document.getElementById('c-idx').value = idx===''?'':idx;
+    if (idx === '') {
+      document.getElementById('c-nom').value='';
+      document.getElementById('c-svc').value='SMTI';
+      document.getElementById('c-type').value='Congé annuel';
+      document.getElementById('c-deb').value='';
+      document.getElementById('c-fin').value='';
+      document.getElementById('c-stat').value='En attente';
+      document.getElementById('c-com').value='';
+    } else {
+      const c = conges[idx];
+      document.getElementById('c-nom').value=c.nom||'';
+      document.getElementById('c-svc').value=c.service||'SMTI';
+      document.getElementById('c-type').value=c.type||'Congé annuel';
+      document.getElementById('c-deb').value=c.debut||'';
+      document.getElementById('c-fin').value=c.fin||'';
+      document.getElementById('c-stat').value=c.statut||'En attente';
+      document.getElementById('c-com').value=c.comment||'';
+    }
+  } else if (type === 'personnel') {
+    document.getElementById('p-idx').value = idx===''?'':idx;
+    if (idx === '') {
+      ['p-prenom','p-nom','p-mat','p-fct','p-email','p-tel'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('p-svc').value='SMTI';
+    } else {
+      const p = personnel[idx];
+      const parts=(p.nom||'').split(' ');
+      document.getElementById('p-prenom').value=parts[0]||'';
+      document.getElementById('p-nom').value=parts.slice(1).join(' ')||p.nom||'';
+      document.getElementById('p-mat').value=p.matricule||'';
+      document.getElementById('p-svc').value=p.service||'SMTI';
+      document.getElementById('p-fct').value=p.fonction||'';
+      document.getElementById('p-email').value=p.email||'';
+      document.getElementById('p-tel').value=p.tel||'';
+    }
+  }
+}
+function closeModal(type) { document.getElementById('m-'+type).classList.remove('open'); }
+
+function saveAction() {
+  const idx = document.getElementById('a-idx').value;
+  const obj = {
+    dir:document.getElementById('a-dir').value,
+    action:document.getElementById('a-desc').value.trim()||'Action sans titre',
+    resp:document.getElementById('a-resp').value.trim(),
+    date:document.getElementById('a-date').value,
+    prio:document.getElementById('a-prio').value,
+    crit:document.getElementById('a-crit').value,
+    statut:document.getElementById('a-stat').value,
+    avance:Math.min(100,Math.max(0,parseInt(document.getElementById('a-av').value)||0)),
+    comment:document.getElementById('a-com').value.trim()
+  };
+  if(idx==='') { actions.push(obj); toast('Action ajoutée'); }
+  else { actions[+idx]=obj; toast('Action mise à jour'); }
+  save(); closeModal('action'); filterActions(); renderDashboard();
+}
+function saveConge() {
+  const idx = document.getElementById('c-idx').value;
+  const deb = document.getElementById('c-deb').value;
+  const fin = document.getElementById('c-fin').value;
+  if(!deb||!fin){ toast('Veuillez renseigner les dates','warn'); return; }
+  const obj = {
+    nom:document.getElementById('c-nom').value.trim()||'Agent',
+    service:document.getElementById('c-svc').value,
+    type:document.getElementById('c-type').value,
+    debut:deb, fin,
+    statut:document.getElementById('c-stat').value,
+    comment:document.getElementById('c-com').value.trim()
+  };
+  if(idx==='') { conges.push(obj); toast('Congé enregistré'); }
+  else { conges[+idx]=obj; toast('Congé mis à jour'); }
+  save(); closeModal('conge'); renderCongeTab();
+}
+function savePersonnel() {
+  const idx = document.getElementById('p-idx').value;
+  const pr = document.getElementById('p-prenom').value.trim();
+  const nm = document.getElementById('p-nom').value.trim();
+  if(!nm){ toast('Veuillez renseigner le nom','warn'); return; }
+  const obj = {
+    nom: pr?(pr+' '+nm):nm,
+    matricule:document.getElementById('p-mat').value.trim()||'N/A',
+    service:document.getElementById('p-svc').value,
+    fonction:document.getElementById('p-fct').value.trim(),
+    email:document.getElementById('p-email').value.trim(),
+    tel:document.getElementById('p-tel').value.trim(),
+    dateDepart:'', statut:'En attente', comment:''
+  };
+  if(idx==='') { personnel.push(obj); toast('Agent ajouté'); }
+  else { personnel[+idx]=obj; toast('Agent mis à jour'); }
+  save(); closeModal('personnel'); renderPersonnel();
+}
+
+// ═══════════════ EXPORT ═══════════════
+function exportCSV() {
+  const cols=['Direction','Action','Responsable','Echeance','Priorite','Criticite','Statut','Avancement','Commentaire'];
+  const rows=actions.map(a=>[a.dir,'"'+a.action.replace(/"/g,'""')+'"',a.resp,a.date,a.prio,a.crit,a.statut,a.avance,a.comment]);
+  const csv=[cols.join(';'),...rows.map(r=>r.join(';'))].join('\n');
+  dl('\uFEFF'+csv,'DRO_Actions_'+isoDate()+'.csv','text/csv;charset=utf-8;');
+  toast('Export CSV prêt');
+}
+function exportCongesCSV() {
+  const cols=['Nom','Matricule','Service','Fonction','Debut','Fin','Type','Statut'];
+  const rows=conges.map(c=>[c.nom,c.matricule||'',c.service,c.fonction||'',c.debut,c.fin,c.type,c.statut]);
+  const csv=[cols.join(';'),...rows.map(r=>r.join(';'))].join('\n');
+  dl('\uFEFF'+csv,'DRO_Conges_'+isoDate()+'.csv','text/csv;charset=utf-8;');
+  toast('Export CSV prêt');
+}
+function dl(data, name, type) {
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([data],{type}));
+  a.download=name; a.click();
+}
+function isoDate(){ return new Date().toISOString().slice(0,10); }
+
+// ═══════════════ TOAST ═══════════════
+let _tTimer;
+function toast(msg, kind='ok') {
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.className='show'+(kind==='warn'?' toast-warn':kind==='err'?' toast-err':'');
+  clearTimeout(_tTimer);
+  _tTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ═══════════════ INIT ═══════════════
+document.getElementById('dash-date');
+renderDashboard();
+renderCongeTab();
+renderPersonnel();
+
+// ═══════════════ TREND INDICATORS ═══════════════
+function addTrendIndicator(kpiEl, value, max, direction) {
+  // Remove existing trend if any
+  const existing = kpiEl.querySelector('.kpi-trend-bar');
+  if (existing) existing.remove();
+  
+  const pct = max ? Math.round((value / max) * 100) : 0;
+  const trend = document.createElement('div');
+  trend.className = 'kpi-trend-bar';
+  trend.style.cssText = 'margin-top:8px;height:3px;background:var(--surface-2);border-radius:99px;overflow:hidden;';
+  const fill = document.createElement('div');
+  fill.style.cssText = `height:100%;width:0;background:${direction==='up'?'linear-gradient(90deg,#059669,#10B981)':direction==='warn'?'linear-gradient(90deg,#D97706,#F59E0B)':'linear-gradient(90deg,var(--blue),var(--blue-vivid))'};border-radius:99px;transition:width 1s cubic-bezier(0.4,0,0.2,1) 0.3s;`;
+  trend.appendChild(fill);
+  kpiEl.appendChild(trend);
+  // Animate after paint
+  requestAnimationFrame(() => { setTimeout(() => { fill.style.width = pct + '%'; }, 50); });
+}
+
+// Animated number counter
+function animateCount(el, target, suffix, duration) {
+  const start = 0;
+  const startTime = performance.now();
+  const targetNum = parseFloat(target) || 0;
+  
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Easing: easeOutQuart
+    const eased = 1 - Math.pow(1 - progress, 4);
+    const current = Math.round(eased * targetNum);
+    el.textContent = current + (suffix || '');
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// Override renderDashboard to add enhanced visuals after rendering
+const _origRenderDashboard = renderDashboard;
+renderDashboard = function() {
+  _origRenderDashboard.apply(this, arguments);
+  
+  // Add trend bars to KPI cards
+  const n = actions.length || 1;
+  const haute = actions.filter(a=>a.prio==='Haute').length;
+  const crit = actions.filter(a=>a.crit==='Importante').length;
+  const avgAv = n ? Math.round(actions.reduce((s,a)=>s+(+a.avance||0),0)/n) : 0;
+  
+  const kpis = document.querySelectorAll('#tab-dashboard .kpi');
+  if (kpis[0]) addTrendIndicator(kpis[0], Math.min(n, 50), 50, 'blue');
+  if (kpis[1]) addTrendIndicator(kpis[1], haute, n, 'warn');
+  if (kpis[2]) addTrendIndicator(kpis[2], crit, n, 'warn');
+  if (kpis[3]) addTrendIndicator(kpis[3], avgAv, 100, 'up');
+  
+  // Animate KPI numbers
+  const animate = (id, val, suf) => {
+    const el = document.getElementById(id);
+    if(el) animateCount(el, parseFloat(val)||0, suf||'', 600);
+  };
+  animate('k-total', actions.length, '');
+  animate('k-haute', haute, '');
+  animate('k-crit', crit, '');
+  animate('k-av', avgAv, '%');
+};
+
+// Override renderCongKPIs to add animations
+const _origRenderCongKPIs = renderCongKPIs;
+renderCongKPIs = function() {
+  _origRenderCongKPIs.apply(this, arguments);
+  // Animate conge KPI numbers after render
+  setTimeout(() => {
+    ['ck-encours','ck-avenir','ck-attente'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) { const v = parseInt(el.textContent)||0; animateCount(el, v, '', 500); }
+    });
+  }, 50);
+};
+
+// Add row animation to tables
+function animateTableRows(tbodyId) {
+  const rows = document.querySelectorAll('#' + tbodyId + ' tr');
+  rows.forEach((row, i) => {
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(-8px)';
+    row.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+    setTimeout(() => {
+      row.style.opacity = '1';
+      row.style.transform = 'translateX(0)';
+    }, i * 18);
+  });
+}
+
+// Wrap filterActions to add animation
+const _origFilterActions = filterActions;
+filterActions = function() {
+  _origFilterActions.apply(this, arguments);
+  animateTableRows('actions-body');
+};
+
+// Wrap renderCongesTable
+const _origRenderCongesTable = renderCongesTable;
+renderCongesTable = function() {
+  _origRenderCongesTable.apply(this, arguments);
+  animateTableRows('conges-body');
+};
+
+</script>
